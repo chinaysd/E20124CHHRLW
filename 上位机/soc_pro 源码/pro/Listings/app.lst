@@ -1,0 +1,1252 @@
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE APP
+OBJECT MODULE PLACED IN .\Objects\app.obj
+COMPILER INVOKED BY: E:\MDK\C51\BIN\C51.EXE ..\app\app.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\app;..\bsp;..\lib;..\lib\inc
+                    -) DEBUG OBJECTEXTEND PRINT(.\Listings\app.lst) OBJECT(.\Objects\app.obj)
+
+line level    source
+
+   1          #include "app.h"
+   2          #include "sys_config.h"
+   3          #include "sc93f833X_C.h"
+   4          #include "data_type.h"
+   5          #include "SensorMethod.h"
+   6          
+   7          #include "bsp_i2c_s.h"
+   8          #include "bsp_uart.h"
+   9          #include "bsp_pwm.h"
+  10          #include "bsp_timer.h"
+  11          #include "timeout.h"
+  12          #include "commu.h"
+  13          
+  14          #include <string.h>
+  15          
+  16          static xdata App_Para_t App_Para;
+  17          static xdata IIC_PARA_t I2c_Para[IIC_NUM];
+  18          extern  Bsp_Tx_t Tx_Buf;
+  19          unsigned char key_static;
+  20          unsigned char status;
+  21          unsigned char key_press_flag;
+  22          unsigned int key_press_cnt;
+  23          
+  24          static xdata unsigned char HEAT_COOL_ARR[3]={0,0,0};
+  25          unsigned char HEAT_COOL_START;
+  26          
+  27          
+  28          
+  29          #define APP_SET_BACKLIGHT(X)            ( App_Para.Tp_LedSta &= (unsigned char)(X))
+  30          #define APP_CLR_BACKLIGHT(X)            ( App_Para.Tp_LedSta |= (unsigned char)(~X))
+  31          #define APP_SET_SENDDATA(X)             (SentData |= (X))
+  32          #define APP_CLR_SNEDDATA(X)             (SentData &= ~(X))
+  33          #define APP_CLR_SHUTDOWN_CNT()  (App_Para.SystemAutoCnt = 0)
+  34          /*****************************************************************************
+  35           * Function       : App_LedInit
+  36           * Description   : 配置LED脚为输出模式
+  37           * Input           : void  
+  38           * Output                 : None
+  39           * Return                 : 
+  40           * Others                 : 
+  41           * Record
+  42           * 1.Date                 : 20180404
+  43           *   Author       : marco
+  44           *   Modification: Created function
+  45          
+  46          *****************************************************************************/
+  47          static void App_LedInit(void){
+  48   1              P0CON |= (1<<1);
+  49   1              P2CON |= (1<<2) | (1<<3) | (1<<4) |(1<<5) |(1<<7) |(1<<6);
+  50   1              P5CON |= (1<<1) | (1<<0);
+  51   1              P2PH &= ~((1<<7)|(1<<6));
+  52   1              LED0_PIN = LED1_PIN = LED2_PIN = LED3_PIN = LED4_PIN = LED5_PIN = RED_LED = OFF;         
+  53   1              
+  54   1              BACK_LIGHT = 1;                         
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 2   
+
+  55   1      }
+  56          
+  57          /*****************************************************************************
+  58           * Function       : App_HeatCoolHandle
+  59           * Description   : 制冷制热模块处理
+  60           * Input           : void  
+  61           * Output                 : None
+  62           * Return                 : 
+  63           * Others                 : 
+  64           * Record
+  65           * 1.Date                 : 20180414
+  66           *   Author       : marco
+  67           *   Modification: Created function
+  68          
+  69          *****************************************************************************/
+  70          void App_HeatCoolHandle(void){
+  71   1              /**
+  72   1                      @brief:处理背光灯显示和控制制冷或制热状态
+  73   1              */
+  74   1              if(App_Para.HC_Sta == HEAT_MODE){
+  75   2              #if 1
+  76   2                      LED5_PIN = ON;
+  77   2              RED_LED = ON;
+  78   2              APP_SET_BACKLIGHT(TP_KEY0_LED);
+  79   2                      Bsp_PwmOff();
+  80   2                      IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+  81   2              #endif
+  82   2              }else if(App_Para.HC_Sta == COOL_MODE){
+  83   2                  #if 1
+  84   2              LED5_PIN = ON;
+  85   2              APP_SET_BACKLIGHT(TP_KEY0_LED);
+  86   2                      Bsp_PwmOff();           
+  87   2                      Bsp_PwnFullOn();        
+  88   2                      IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+  89   2              #endif
+  90   2              }else{
+  91   2                  #if 1
+  92   2                      Bsp_PwmOff();
+  93   2                      if(App_Para.FootLedSta){
+  94   3                              Bsp_PwmON();
+  95   3                      }
+  96   2              LED5_PIN = OFF;
+  97   2              RED_LED = OFF;
+  98   2                      APP_CLR_BACKLIGHT(TP_KEY0_LED);
+  99   2                      IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+ 100   2              #endif
+ 101   2              }     
+ 102   1      }
+ 103          
+ 104          
+ 105          void App_LockKeyHandle(void){
+ 106   1              if(App_Para.LockFlag){          
+ 107   2                      App_Para.Tp_LedStaBak = App_Para.Tp_LedSta;
+ 108   2                      
+ 109   2                      if(App_Para.FootLedSta || App_Para.LockFlag){
+ 110   3                              APP_SET_BACKLIGHT(TP_KEY5_LED);  //Tp_LedSta &=  0xdf     1101 1111     
+ 111   3                              LED0_PIN = ON;
+ 112   3                      }else{
+ 113   3                              APP_CLR_BACKLIGHT(TP_KEY5_LED);  //Tp_LedSta |= ~0xdf     0010 0000
+ 114   3                              LED0_PIN = OFF;
+ 115   3                      }
+ 116   2                      
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 3   
+
+ 117   2                      if(App_Para.HC_Sta == STOP_MODE){
+ 118   3                              APP_CLR_BACKLIGHT(TP_KEY0_LED);   //Tp_LedSta |=  0xfe     1111 1110
+ 119   3                              LED5_PIN = OFF;
+ 120   3                      }else if((App_Para.HC_Sta == HEAT_MODE)||(App_Para.HC_Sta == COOL_MODE)){
+ 121   3                              APP_SET_BACKLIGHT(TP_KEY0_LED);   //Tp_LedSta &=  0xfe     1111 1110
+ 122   3                  LED5_PIN = ON;
+ 123   3                      }
+ 124   2             
+ 125   2              if(App_Para.MASSAGESta == MASSAGE_ON)
+ 126   2              {
+ 127   3                 LED1_PIN = ON;
+ 128   3                         APP_SET_BACKLIGHT(TP_KEY4_LED);
+ 129   3              }
+ 130   2              else
+ 131   2              {
+ 132   3                 LED1_PIN = OFF;
+ 133   3                 APP_CLR_BACKLIGHT(TP_KEY4_LED);
+ 134   3              }
+ 135   2              #if 1
+ 136   2              if(App_Para.WarmSta == WARM_ON)
+ 137   2              {
+ 138   3                 LED4_PIN = ON;
+ 139   3                 APP_SET_BACKLIGHT(TP_KEY1_LED);
+ 140   3              }
+ 141   2              else
+ 142   2              {
+ 143   3                 LED4_PIN = OFF;
+ 144   3                 APP_CLR_BACKLIGHT(TP_KEY1_LED);
+ 145   3              }
+ 146   2              #endif 
+ 147   2                      BACK_LIGHT = 0;
+ 148   2                      //LED0_PIN = ON;
+ 149   2              //APP_SET_BACKLIGHT(TP_KEY5_LED);
+ 150   2                      App_Para.Tp_LedSta|= 0X40;
+ 151   2                      IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+ 152   2              }else{
+ 153   2                      if(App_Para.ShutDownFlag){
+ 154   3                              App_Para.ShutDownFlag = False;
+ 155   3                              App_Para.SystemAutoClsFlag = True;
+ 156   3                              App_Para.SystemAutoCnt = 0;
+ 157   3                              App_Para.Tp_LedSta = 0;
+ 158   3                              App_Para.FootLedSta = FOOT_LED_OFF;
+ 159   3                              APP_CLR_BACKLIGHT(TP_BACKLIGHT_LED);
+ 160   3                              IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);               
+ 161   3                              LED0_PIN = LED1_PIN = LED2_PIN = LED3_PIN = LED4_PIN = LED5_PIN= OFF;
+ 162   3                              BACK_LIGHT = 1;
+ 163   3                              return ;
+ 164   3                      }
+ 165   2                      App_Para.Tp_LedSta = App_Para.Tp_LedStaBak;
+ 166   2      
+ 167   2                      if(App_Para.HC_Sta == STOP_MODE){
+ 168   3                              APP_CLR_BACKLIGHT(TP_KEY0_LED); 
+ 169   3                              LED5_PIN = OFF;
+ 170   3                              
+ 171   3                      }else if((App_Para.HC_Sta == HEAT_MODE)||(App_Para.HC_Sta == COOL_MODE)){
+ 172   3                              APP_SET_BACKLIGHT(TP_KEY0_LED);
+ 173   3                  LED5_PIN = ON;
+ 174   3                      }
+ 175   2              if(App_Para.FootLedSta || App_Para.LockFlag){
+ 176   3                              APP_SET_BACKLIGHT(TP_KEY5_LED);  //Tp_LedSta &=  0xdf     1101 1111     
+ 177   3                              LED0_PIN = ON;
+ 178   3                      }else{
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 4   
+
+ 179   3                              APP_CLR_BACKLIGHT(TP_KEY5_LED);  //Tp_LedSta |= ~0xdf     0010 0000
+ 180   3                              LED0_PIN = OFF;
+ 181   3                      }
+ 182   2              
+ 183   2              if(App_Para.MASSAGESta == MASSAGE_ON)
+ 184   2              {
+ 185   3                 LED1_PIN = ON;
+ 186   3                         APP_SET_BACKLIGHT(TP_KEY4_LED);
+ 187   3              }
+ 188   2              else
+ 189   2              {
+ 190   3                 LED1_PIN = OFF;
+ 191   3                 APP_CLR_BACKLIGHT(TP_KEY4_LED);
+ 192   3              }
+ 193   2              #if 1
+ 194   2              if(App_Para.WarmSta == WARM_ON)
+ 195   2              {
+ 196   3                 LED4_PIN = ON;
+ 197   3                 APP_SET_BACKLIGHT(TP_KEY1_LED);
+ 198   3              }
+ 199   2              else
+ 200   2              {
+ 201   3                 LED4_PIN = OFF;
+ 202   3                 APP_CLR_BACKLIGHT(TP_KEY1_LED);
+ 203   3              }
+ 204   2                      #endif
+ 205   2                      IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedStaBak);
+ 206   2              #if 0
+                              LED0_PIN =App_Para.Tp_LedSta & ~TP_KEY0_LED;
+                              LED1_PIN =App_Para.Tp_LedSta & ~TP_KEY1_LED;
+                              LED2_PIN =App_Para.Tp_LedSta & ~TP_KEY2_LED;
+                              LED3_PIN =App_Para.Tp_LedSta & ~TP_KEY3_LED;
+                              LED4_PIN =App_Para.Tp_LedSta & ~TP_KEY4_LED;
+                              LED5_PIN =App_Para.Tp_LedSta & ~TP_KEY5_LED;
+                      #endif
+ 214   2                      BACK_LIGHT = 1;         
+ 215   2              //LED0_PIN = OFF;
+ 216   2              //APP_CLR_BACKLIGHT(TP_KEY5_LED);  //Tp_LedSta |= ~0xdf     0010 0000
+ 217   2              }       
+ 218   1              App_Para.UpDataFlag= True;
+ 219   1              APP_CLR_SHUTDOWN_CNT();
+ 220   1      }
+ 221          #if 1
+ 222          void App_OpenKeyHandle(void){
+ 223   1              if(!App_Para.LockFlag){
+ 224   2                      App_Para.UpDataFlag= True;
+ 225   2                      App_Para.Pushrod_Status = PUSHROD_A_OPEN;
+ 226   2                      APP_CLR_SHUTDOWN_CNT();
+ 227   2              }
+ 228   1      }
+ 229          
+ 230          void App_CLoseKeyHandle(void){
+ 231   1              if(!App_Para.LockFlag){         
+ 232   2                      App_Para.UpDataFlag= True;
+ 233   2                      App_Para.Pushrod_Status = PUSHROD_A_CLOSE;
+ 234   2                      APP_CLR_SHUTDOWN_CNT();
+ 235   2              }
+ 236   1      }
+ 237          #endif
+ 238          void App_LightKeyHandle(void){
+ 239   1              if(!App_Para.LockFlag){
+ 240   2                      App_Para.UpDataFlag= True;
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 5   
+
+ 241   2                      
+ 242   2                      if(App_Para.FootLedSta == FOOT_LED_OFF){
+ 243   3                              APP_SET_BACKLIGHT(TP_KEY5_LED);
+ 244   3                  LED0_PIN = ON;
+ 245   3                              App_Para.FootLedSta = FOOT_LED_ON;
+ 246   3                              if(App_Para.HC_Sta == STOP_MODE){
+ 247   4                                      Bsp_PwmON();
+ 248   4                              }
+ 249   3                      }else{
+ 250   3                              APP_CLR_BACKLIGHT(TP_KEY5_LED);
+ 251   3                              LED0_PIN = OFF;
+ 252   3                              App_Para.FootLedSta = FOOT_LED_OFF;
+ 253   3                              if(App_Para.HC_Sta == STOP_MODE){
+ 254   4                                      Bsp_PwmOff();
+ 255   4                              }
+ 256   3                      }
+ 257   2                      IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+ 258   2                      APP_CLR_SHUTDOWN_CNT();
+ 259   2              }
+ 260   1      }
+ 261          
+ 262          void App_MassKeyHandle(void){
+ 263   1              if(!App_Para.LockFlag){
+ 264   2                      App_Para.UpDataFlag= True;
+ 265   2                      
+ 266   2                      if(App_Para.MASSAGESta != MASSAGE_ON){
+ 267   3                              APP_SET_BACKLIGHT(TP_KEY4_LED);
+ 268   3                              App_Para.MASSAGESta = MASSAGE_ON;
+ 269   3                  App_Para.MassAutoClsFlag = True;
+ 270   3                  App_Para.MassAutoCnt = 0;
+ 271   3                              LED1_PIN = ON;
+ 272   3                      }else{
+ 273   3                              APP_CLR_BACKLIGHT(TP_KEY4_LED);
+ 274   3                              LED1_PIN = OFF;
+ 275   3                              App_Para.MASSAGESta = MASSAGE_OFF;
+ 276   3                  App_Para.MassAutoClsFlag = False;
+ 277   3                      }
+ 278   2                      IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+ 279   2                      APP_CLR_SHUTDOWN_CNT();
+ 280   2              }
+ 281   1      }
+ 282          #if 1
+ 283          void App_WarmKeyHandle(void){
+ 284   1              if(!App_Para.LockFlag){
+ 285   2                      App_Para.UpDataFlag= True;
+ 286   2                      
+ 287   2                      if(App_Para.WarmSta == WARM_OFF){
+ 288   3                              APP_SET_BACKLIGHT(TP_KEY1_LED);
+ 289   3                              App_Para.WarmSta = WARM_ON;
+ 290   3                  App_Para.WarmAutoClsFlag = True;
+ 291   3                  App_Para.WarmAutoCnt = 0;
+ 292   3                              LED4_PIN = ON;
+ 293   3                      }else{
+ 294   3                              APP_CLR_BACKLIGHT(TP_KEY1_LED);
+ 295   3                              LED4_PIN = OFF;
+ 296   3                              App_Para.WarmSta = WARM_OFF;
+ 297   3                  App_Para.WarmAutoClsFlag = False;
+ 298   3                      }
+ 299   2                      IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+ 300   2                      APP_CLR_SHUTDOWN_CNT();
+ 301   2              }
+ 302   1      }
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 6   
+
+ 303          #endif
+ 304          
+ 305          
+ 306          
+ 307          /*****************************************************************************
+ 308           * Function       : App_Key0Handle
+ 309           * Description   : TK0
+ 310           * Input           : void  
+ 311           * Output                 : None
+ 312           * Return                 : 
+ 313           * Others                 : 
+ 314           * Record
+ 315           * 1.Date                 : 20180416
+ 316           *   Author       : marco
+ 317           *   Modification: Created function
+ 318          
+ 319          *****************************************************************************/
+ 320          
+ 321          void App_Key0Handle(void){
+ 322   1              App_LockKeyHandle();   
+ 323   1      }
+ 324          
+ 325          /*****************************************************************************
+ 326           * Function       : App_Key1Handle
+ 327           * Description   : TK 1
+ 328           * Input           : void  
+ 329           * Output                 : None
+ 330           * Return                 : 
+ 331           * Others                 : 
+ 332           * Record
+ 333           * 1.Date                 : 20180416
+ 334           *   Author       : marco
+ 335           *   Modification: Created function
+ 336          
+ 337          *****************************************************************************/
+ 338          #if 0
+              void App_Key1Handle(void){
+                 
+                      if(!App_Para.LockFlag){         
+                              App_Para.UpDataFlag= True;
+                              if(App_Para.HC_Sta != COOL_MODE){
+                                      App_Para.HC_Sta = COOL_MODE;
+                                      App_Para.CoolAutoClsFlag = True;
+                                      App_Para.CoolAutoCnt = 0;
+                              }else{
+                                      App_Para.HC_Sta = STOP_MODE;
+                                      App_Para.CoolAutoClsFlag = False;
+                              }
+                              App_HeatCoolHandle();                   
+                              APP_CLR_SHUTDOWN_CNT();
+                      }
+                 
+                  if(!App_Para.LockFlag){             
+                              App_Para.UpDataFlag= True;
+                              App_Para.Pushrod_Status = PUSHROD_B_CLOSE;
+                              APP_CLR_SHUTDOWN_CNT();
+                      }
+                 
+              }
+              #endif 
+ 363          
+ 364          
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 7   
+
+ 365          /*****************************************************************************
+ 366           * Function       : App_Key2Handle
+ 367           * Description   : TK2
+ 368           * Input           : void  
+ 369           * Output                 : None
+ 370           * Return                 : 
+ 371           * Others                 : 
+ 372           * Record
+ 373           * 1.Date                 : 20180416
+ 374           *   Author       : marco
+ 375           *   Modification: Created function
+ 376          
+ 377          *****************************************************************************/
+ 378          void App_Key2Handle(void){
+ 379   1              App_CLoseKeyHandle();
+ 380   1      }
+ 381          
+ 382          /*****************************************************************************
+ 383           * Function       : App_Key3Handle
+ 384           * Description   : TK3
+ 385           * Input           : void  
+ 386           * Output                 : None
+ 387           * Return                 : 
+ 388           * Others                 : 
+ 389           * Record
+ 390           * 1.Date                 : 20180416
+ 391           *   Author       : marco
+ 392           *   Modification: Created function
+ 393          
+ 394          *****************************************************************************/
+ 395          void App_Key3Handle(void){
+ 396   1              App_OpenKeyHandle();
+ 397   1      }
+ 398          
+ 399          /*****************************************************************************
+ 400           * Function       : App_Key4Handle
+ 401           * Description   : TK4
+ 402           * Input           : void  
+ 403           * Output                 : None
+ 404           * Return                 : 
+ 405           * Others                 : 
+ 406           * Record
+ 407           * 1.Date                 : 20180416
+ 408           *   Author       : marco
+ 409           *   Modification: Created function
+ 410          
+ 411          *****************************************************************************/
+ 412          
+ 413          void App_Key4Handle(void){
+ 414   1      #if 0
+              
+                      if(!App_Para.LockFlag){         
+                              App_Para.UpDataFlag= True;
+                              if(App_Para.HC_Sta != HEAT_MODE){
+                                      App_Para.HC_Sta = HEAT_MODE;
+                                      App_Para.HeatAutoClsFlag = True;
+                                      App_Para.HeatAutoCnt = 0;
+                              }else{
+                                      App_Para.HC_Sta = STOP_MODE;
+                                      App_Para.HeatAutoClsFlag = False;
+                              }
+                              App_HeatCoolHandle();
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 8   
+
+                      }
+              
+              if(!App_Para.LockFlag){
+                              App_Para.UpDataFlag= True;
+                              App_Para.Pushrod_Status = PUSHROD_B_OPEN;
+                              APP_CLR_SHUTDOWN_CNT();
+                      }
+              #endif
+ 435   1      #if 1
+ 436   1      if(!App_Para.LockFlag){         
+ 437   2              App_Para.UpDataFlag= True;
+ 438   2              if(!HEAT_COOL_START)
+ 439   2              {
+ 440   3                      HEAT_COOL_START = 1;
+ 441   3                      switch(++HEAT_COOL_ARR[1])
+ 442   3                      {
+ 443   4                      case 1:
+ 444   4                                      if(App_Para.HC_Sta != COOL_MODE){
+ 445   5                                              App_Para.HC_Sta = COOL_MODE;
+ 446   5                                              App_Para.CoolAutoClsFlag = True;
+ 447   5                                              App_Para.CoolAutoCnt = 0;
+ 448   5                                      }
+ 449   4                                      break;
+ 450   4                      case 2:
+ 451   4                                      if(App_Para.HC_Sta != HEAT_MODE){
+ 452   5                                              App_Para.HC_Sta = HEAT_MODE;
+ 453   5                                              App_Para.HeatAutoClsFlag = True;
+ 454   5                                              App_Para.HeatAutoCnt = 0;
+ 455   5                                      }                                                                  
+ 456   4                                 break;
+ 457   4                      case 3:
+ 458   4                                      App_Para.HC_Sta = STOP_MODE;
+ 459   4                                      App_Para.HeatAutoClsFlag = False;
+ 460   4                                      App_Para.CoolAutoClsFlag = False;
+ 461   4                                      HEAT_COOL_ARR[1] = 0;
+ 462   4                                      break;
+ 463   4                      default:
+ 464   4                                      App_Para.HC_Sta = STOP_MODE;
+ 465   4                                      App_Para.HeatAutoClsFlag = False;
+ 466   4                                      App_Para.CoolAutoClsFlag = False;
+ 467   4                                      HEAT_COOL_ARR[1] = 0;
+ 468   4                                      break;
+ 469   4                      }
+ 470   3              }       
+ 471   2              App_HeatCoolHandle();
+ 472   2              APP_CLR_SHUTDOWN_CNT();
+ 473   2      }
+ 474   1      #endif                           
+ 475   1      
+ 476   1      }
+ 477          
+ 478          
+ 479          
+ 480          
+ 481          /*****************************************************************************
+ 482           * Function       : App_Key5Handle
+ 483           * Description   : TK5
+ 484           * Input           : void  
+ 485           * Output                 : None
+ 486           * Return                 : 
+ 487           * Others                 : 
+ 488           * Record
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 9   
+
+ 489           * 1.Date                 : 20180416
+ 490           *   Author       : marco
+ 491           *   Modification: Created function
+ 492          
+ 493          *****************************************************************************/
+ 494          void App_Key5Handle(void){
+ 495   1              App_MassKeyHandle();
+ 496   1      }
+ 497          
+ 498          
+ 499          static int System_Send_Message(unsigned int cont){    
+ 500   1              COMMU_BUF_t TX_Buf;    
+ 501   1              TX_Buf.Data_Format.Start = START_FIELD;    
+ 502   1              TX_Buf.Data_Format.MessageID = NUM1;    
+ 503   1              TX_Buf.Data_Format.Cont1 = Get_High(cont);    
+ 504   1              TX_Buf.Data_Format.Cont2 = Get_Low(cont);    
+ 505   1              TX_Buf.Data_Format.Checksum = (unsigned char)(TX_Buf.Data_Format.Start + TX_Buf.Data_Format.MessageID+   
+             -       
+ 506   1                      TX_Buf.Data_Format.Cont1 +  TX_Buf.Data_Format.Cont2);    
+ 507   1              TX_Buf.Data_Format.Stop1 = Get_High(STOP_MESSAGE);    
+ 508   1              TX_Buf.Data_Format.Stop2 = Get_Low(STOP_MESSAGE);    
+ 509   1              Bsp_UartSendBuf(BSP_UART1_ID, TX_Buf.Buf, BUF_SIZE);
+ 510   1              return 0; 
+ 511   1      } 
+ 512          
+ 513          /*****************************************************************************
+ 514           * Function       : Key_Scan
+ 515           * Description   : 触摸按键扫描
+ 516           * Input           : void  
+ 517           * Output                 : None
+ 518           * Return                 : 
+ 519           * Others                 : 
+ 520           * Record
+ 521           * 1.Date                 : 20180403
+ 522           *   Author       : marco
+ 523           *   Modification: Created function
+ 524          
+ 525          *****************************************************************************/
+ 526          void Key_Scan(void){                                    
+ 527   1              if(SOCAPI_TouchKeyStatus&0x80)                  //重要步骤2:  触摸键扫描一轮标志，是否调用TouchKeyScan()一定要根据此
+             -标志位置起后
+ 528   1               {                                                                                                                                              
+ 529   2                      SOCAPI_TouchKeyStatus &= 0x7f;  //重要步骤3: 清除标志位， 需要外部清除。                                                                                                            
+ 530   2                      App_Para.Chg_GetKey = TouchKeyScan();
+ 531   2                      switch(App_Para.Chg_GetKey){    
+ 532   3                              case CHG_KEY0_VALUE:{
+ 533   4                      if(App_Para.Chg_CurKey != CHG_KEY0_VALUE){
+ 534   5                                              App_Para.Chg_CurKey = CHG_KEY0_VALUE;
+ 535   5                          key_static = 1;
+ 536   5                          key_press_flag = 1;
+ 537   5                                      }
+ 538   4                                      break;
+ 539   4                              }
+ 540   3                              
+ 541   3                              case CHG_KEY1_VALUE:{
+ 542   4                                      if(App_Para.Chg_CurKey != CHG_KEY1_VALUE){                                      
+ 543   5                                              App_Para.Chg_CurKey = CHG_KEY1_VALUE;
+ 544   5                                              App_Key5Handle();
+ 545   5                                      }
+ 546   4                                      break;
+ 547   4                              }
+ 548   3                              
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 10  
+
+ 549   3                              case CHG_KEY2_VALUE:{
+ 550   4                                      if(App_Para.Chg_CurKey != CHG_KEY2_VALUE){
+ 551   5                                              App_Para.Chg_CurKey = CHG_KEY2_VALUE;
+ 552   5                                              App_Key2Handle(); //推杆B打开
+ 553   5                                              
+ 554   5                                      }
+ 555   4                                      break;
+ 556   4                              }
+ 557   3                              
+ 558   3                              case CHG_KEY3_VALUE:{
+ 559   4                                      if(App_Para.Chg_CurKey != CHG_KEY3_VALUE){
+ 560   5                                              App_Para.Chg_CurKey = CHG_KEY3_VALUE;
+ 561   5                                              App_Key3Handle();//推杆A打开
+ 562   5                                      }
+ 563   4                                      break;
+ 564   4                              }
+ 565   3                              
+ 566   3                              case CHG_KEY4_VALUE:{
+ 567   4                                      if(App_Para.Chg_CurKey != CHG_KEY4_VALUE){
+ 568   5                                              App_Para.Chg_CurKey = CHG_KEY4_VALUE;
+ 569   5                                              App_WarmKeyHandle();
+ 570   5                                      }
+ 571   4                                      break;
+ 572   4                              }
+ 573   3                              
+ 574   3                              case CHG_KEY5_VALUE:{
+ 575   4                                      if(App_Para.Chg_CurKey != CHG_KEY5_VALUE){
+ 576   5                                              App_Para.Chg_CurKey = CHG_KEY5_VALUE;
+ 577   5                                          App_Key4Handle();
+ 578   5                                     }
+ 579   4                      break;
+ 580   4                   }
+ 581   3                              default:{
+ 582   4                                      if(App_Para.Chg_CurKey){
+ 583   5                                              App_Para.Chg_CurKey = 0;
+ 584   5                          key_static = 2;
+ 585   5                          key_press_flag = 0;
+ 586   5                          key_press_cnt  = 0;
+ 587   5                          HEAT_COOL_START = 0;
+ 588   5                                              //LED1_PIN = OFF; 
+ 589   5                                              LED2_PIN = OFF;
+ 590   5                          LED3_PIN = OFF; 
+ 591   5                                              //LED4_PIN = OFF;
+ 592   5                                              //APP_CLR_BACKLIGHT(TP_KEY1_LED);
+ 593   5                                              APP_CLR_BACKLIGHT(TP_KEY2_LED);
+ 594   5                          APP_CLR_BACKLIGHT(TP_KEY3_LED);
+ 595   5                                              //APP_CLR_BACKLIGHT(TP_KEY4_LED);
+ 596   5                                              IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+ 597   5                                              App_Para.LockDetFlag[0] = False;
+ 598   5                                              if(App_Para.Pushrod_Status != PUSHROD_STOP){
+ 599   6                                                      App_Para.UpDataFlag = True;
+ 600   6                                                      App_Para.Pushrod_Status = PUSHROD_STOP;
+ 601   6                                              }
+ 602   5                                      }
+ 603   4                                      break;
+ 604   4                              }
+ 605   3                      }
+ 606   2                      TouchKeyRestart();                                      //启动下一轮转换                                                                                                                                                                                                                                                                        
+ 607   2              }                          
+ 608   1      }
+ 609          
+ 610          /*****************************************************************************
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 11  
+
+ 611           * Function       : App_Init
+ 612           * Description   : 初始化系统
+ 613           * Input           : void  
+ 614           * Output                 : None
+ 615           * Return                 : 
+ 616           * Others                 : 
+ 617           * Record
+ 618           * 1.Date                 : 20180403
+ 619           *   Author       : marco
+ 620           *   Modification: Created function
+ 621          
+ 622          *****************************************************************************/
+ 623          void App_Init(void){
+ 624   1              int i;  
+ 625   1              App_LedInit();
+ 626   1              Bsp_PWMInit();
+ 627   1              Bsp_PwmOff();
+ 628   1              Bsp_UartInit(BSP_UART1_ID);
+ 629   1              Bsp_Timer0Init();
+ 630   1              TimeOutDet_Init();      
+ 631   1              for(i = 0;i < IIC_NUM;i ++){
+ 632   2                      I2c_Para[i].ID = i;
+ 633   2                      if(i == 0){
+ 634   3                              I2c_Para[i].read_addr = I2C_READ_ADDR;
+ 635   3                              I2c_Para[i].write_addr = I2C_WRITE_ADDR;
+ 636   3                      }
+ 637   2                      IIC_Init(&I2c_Para[i]);
+ 638   2              }
+ 639   1              P1PH |= 0X80;           // i2c int 
+ 640   1              //APP_CLR_BACKLIGHT(TP_BACKLIGHT_LED);
+ 641   1              APP_SET_BACKLIGHT(TP_BACKLIGHT_LED);
+ 642   1              IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);       
+ 643   1              TouchKeyInit(); 
+ 644   1              App_Para.UpDataFlag = True;
+ 645   1              App_Para.SystemAutoClsFlag = True;
+ 646   1              EA = 1;         
+ 647   1      }
+ 648          
+ 649          /*****************************************************************************
+ 650           * Function       : App_Handle
+ 651           * Description   : 系统事件处理
+ 652           * Input           : void  
+ 653           * Output                 : None
+ 654           * Return                 : 
+ 655           * Others                 : 
+ 656           * Record
+ 657           * 1.Date                 : 20180403
+ 658           *   Author       : marco
+ 659           *   Modification: Created function
+ 660          
+ 661          *****************************************************************************/
+ 662          void App_Handle(void){
+ 663   1              #ifdef SYS_ENABLE_WDT
+ 664   1                      CLEAR_WDT();
+ 665   1              #endif
+ 666   1              /**
+ 667   1                      @brief: Processing CHG button
+ 668   1              */
+ 669   1              Key_Scan();       
+ 670   1      
+ 671   1              /**
+ 672   1                      @brief:Processing TP button
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 12  
+
+ 673   1              */
+ 674   1              if(!Get_I2C_INT()){
+ 675   2                      IIC_Read_Data(&I2c_Para[0], I2c_Para[0].read_addr, &App_Para.TP_GetKey);
+ 676   2              
+ 677   2                      switch(App_Para.TP_GetKey){
+ 678   3                              case TP_KEY0_VALUE:{
+ 679   4                                      if(App_Para.Tp_CurKey != TP_KEY3_VALUE){
+ 680   5                                              App_Para.Tp_CurKey = TP_KEY3_VALUE;
+ 681   5                          App_Key3Handle(); //推杆B打开
+ 682   5                                      }
+ 683   4                                      break;
+ 684   4                              }
+ 685   3      
+ 686   3                              case TP_KEY1_VALUE:{
+ 687   4                                      if(App_Para.Tp_CurKey != TP_KEY1_VALUE){
+ 688   5                                              App_Para.Tp_CurKey = TP_KEY1_VALUE;
+ 689   5                                              App_WarmKeyHandle();
+ 690   5                                      }
+ 691   4                                      break;
+ 692   4                              }
+ 693   3      
+ 694   3                              case TP_KEY2_VALUE:{
+ 695   4                                      if(App_Para.Tp_CurKey != TP_KEY2_VALUE){
+ 696   5                                              App_Para.Tp_CurKey = TP_KEY2_VALUE;
+ 697   5                          App_Key4Handle();              
+ 698   5                                      }
+ 699   4                                      break;
+ 700   4                              }
+ 701   3      
+ 702   3                              case TP_KEY3_VALUE:{
+ 703   4                                      if(App_Para.Tp_CurKey != TP_KEY0_VALUE){
+ 704   5                                              App_Para.Tp_CurKey = TP_KEY0_VALUE;
+ 705   5                                              key_static = 1;
+ 706   5                          key_press_flag = 1;
+ 707   5                                      }
+ 708   4                                      break;
+ 709   4                              }
+ 710   3                              
+ 711   3                              case TP_KEY4_VALUE:{
+ 712   4                                      if(App_Para.Tp_CurKey != TP_KEY4_VALUE){
+ 713   5                                              App_Para.Tp_CurKey = TP_KEY4_VALUE;
+ 714   5                                              App_Key5Handle();
+ 715   5                                      }
+ 716   4                                      break;
+ 717   4                              }
+ 718   3      
+ 719   3                              case TP_KEY5_VALUE:{
+ 720   4                                      if(App_Para.Tp_CurKey != TP_KEY5_VALUE){
+ 721   5                                              App_Para.Tp_CurKey = TP_KEY5_VALUE;
+ 722   5                                              App_Key2Handle(); //推杆B打开
+ 723   5                                      }
+ 724   4                                      break;
+ 725   4                              }
+ 726   3                              default:{
+ 727   4                                      if(App_Para.Tp_CurKey){
+ 728   5                                              App_Para.Tp_CurKey = 0;
+ 729   5                          key_static = 2;
+ 730   5                          key_press_flag = 0;
+ 731   5                          key_press_cnt  = 0;
+ 732   5                          HEAT_COOL_START = 0;
+ 733   5                          //LED1_PIN = OFF; 
+ 734   5                          LED2_PIN = OFF;
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 13  
+
+ 735   5                          LED3_PIN = OFF; 
+ 736   5                          //LED4_PIN = OFF;
+ 737   5                          //APP_CLR_BACKLIGHT(TP_KEY1_LED);
+ 738   5                          APP_CLR_BACKLIGHT(TP_KEY2_LED);
+ 739   5                          APP_CLR_BACKLIGHT(TP_KEY3_LED);
+ 740   5                          //APP_CLR_BACKLIGHT(TP_KEY4_LED);
+ 741   5                                              IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+ 742   5                                              App_Para.LockDetFlag[1] = False;                                        
+ 743   5                                              if(App_Para.Pushrod_Status != PUSHROD_STOP){
+ 744   6                                                      App_Para.UpDataFlag = True;
+ 745   6                                                      App_Para.Pushrod_Status = PUSHROD_STOP;
+ 746   6                                              }
+ 747   5                                      }
+ 748   4                                      break;
+ 749   4                              }
+ 750   3                      }
+ 751   2              }
+ 752   1      
+ 753   1              /**
+ 754   1                      @brief:TP Handle button length press.
+ 755   1              */
+ 756   1          switch (status)
+ 757   1              {
+ 758   2                  case START:
+ 759   2                            if(key_static == 1)
+ 760   2                            {
+ 761   3                               status = SHORT;
+ 762   3                            }
+ 763   2                            break;
+ 764   2                  case SHORT:
+ 765   2                             if(key_static == 2)
+ 766   2                             {
+ 767   3                                  App_LightKeyHandle();
+ 768   3                                  status = START;
+ 769   3                                  key_static = 0;
+ 770   3                                  key_press_cnt = 0;
+ 771   3                             }
+ 772   2                             if(key_press_cnt > 1500)
+ 773   2                             {
+ 774   3                                  status = LONG;
+ 775   3                                  key_press_cnt = 0;
+ 776   3                                      if(!App_Para.LockFlag){
+ 777   4                                              App_Para.LockFlag = True;
+ 778   4                                      }else{
+ 779   4                                              App_Para.LockFlag = False;
+ 780   4                                      }                                       
+ 781   3                                      App_Key0Handle();
+ 782   3                             }
+ 783   2                             
+ 784   2                             break;
+ 785   2                  case LONG:
+ 786   2                             if(key_static == 2)
+ 787   2                             {
+ 788   3                                status = START; 
+ 789   3                                key_static = 0;
+ 790   3                             }
+ 791   2                             break;
+ 792   2                  default:
+ 793   2                          break;        
+ 794   2              }
+ 795   1      
+ 796   1              /**
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 14  
+
+ 797   1                      @brief: refresh TP led display
+ 798   1              */
+ 799   1              if(App_Para.TpLedDisCntFlag){
+ 800   2                      IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+ 801   2                      App_Para.TpLedDisCntFlag = False;
+ 802   2                      App_Para.TpLedDisCnt = 0;
+ 803   2              }
+ 804   1              
+ 805   1              /**
+ 806   1                      @brief:Send control command
+ 807   1              */
+ 808   1              if(App_Para.UpDataFlag){
+ 809   2                      unsigned int SentData = 0;
+ 810   2                      App_Para.UpDataFlag = False;
+ 811   2                      /**
+ 812   2                              @brief:LED moulde
+ 813   2                      */
+ 814   2                      #if 1
+ 815   2                      if(App_Para.FootLedSta == FOOT_LED_ON){
+ 816   3                              APP_CLR_SNEDDATA(CONT_LED_OFF);
+ 817   3                              APP_SET_SENDDATA(CONT_LED_ON);
+ 818   3                      }else if(App_Para.FootLedSta == FOOT_LED_OFF){
+ 819   3                              APP_CLR_SNEDDATA(CONT_LED_ON);
+ 820   3                              APP_SET_SENDDATA(CONT_LED_OFF);
+ 821   3                      }
+ 822   2              #endif
+ 823   2      
+ 824   2                      /**
+ 825   2                              @brief:pushrod moudle
+ 826   2                      */
+ 827   2                      
+ 828   2                      if(App_Para.Pushrod_Status == PUSHROD_STOP ||App_Para.Pushrod_Status == PUSHROD_A_STOP){
+ 829   3                              APP_CLR_SNEDDATA(CONT_PUSHROD_A_OPEN);
+ 830   3                              APP_CLR_SNEDDATA(CONT_PUSHROD_A_CLOSE);
+ 831   3                              APP_SET_SENDDATA(CONT_PUSHROD_STOP);
+ 832   3                      }else if(App_Para.Pushrod_Status == PUSHROD_A_OPEN){
+ 833   3                          APP_CLR_SNEDDATA(CONT_PUSHROD_A_STOP);
+ 834   3                              APP_CLR_SNEDDATA(CONT_PUSHROD_A_CLOSE);
+ 835   3                              APP_SET_SENDDATA(CONT_PUSHROD_A_OPEN);
+ 836   3                      }else if(App_Para.Pushrod_Status == PUSHROD_A_CLOSE){
+ 837   3                              APP_CLR_SNEDDATA(CONT_PUSHROD_A_OPEN);
+ 838   3                              APP_CLR_SNEDDATA(CONT_PUSHROD_A_OPEN);
+ 839   3                              APP_SET_SENDDATA(CONT_PUSHROD_A_CLOSE);
+ 840   3                      }
+ 841   2                      #if 0
+                              if(App_Para.Pushrod_Status == PUSHROD_STOP ||App_Para.Pushrod_Status == PUSHROD_B_STOP){
+                                      APP_CLR_SNEDDATA(CONT_PUSHROD_B_OPEN);
+                                      APP_CLR_SNEDDATA(CONT_PUSHROD_B_CLOSE);
+                                      APP_SET_SENDDATA(CONT_PUSHROD_STOP);
+                              }else if(App_Para.Pushrod_Status == PUSHROD_B_OPEN){
+                                      APP_CLR_SNEDDATA(CONT_PUSHROD_B_STOP);
+                                      APP_CLR_SNEDDATA(CONT_PUSHROD_A_CLOSE);
+                                      APP_SET_SENDDATA(CONT_PUSHROD_B_OPEN);
+                              }else if(App_Para.Pushrod_Status == PUSHROD_B_CLOSE){
+                                      APP_CLR_SNEDDATA(CONT_PUSHROD_B_OPEN);
+                                      APP_CLR_SNEDDATA(CONT_PUSHROD_B_OPEN);
+                                      APP_SET_SENDDATA(CONT_PUSHROD_B_CLOSE);
+                              }
+                      #endif
+ 856   2                      /**
+ 857   2                              @brief:heat & cool moudle
+ 858   2                      */
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 15  
+
+ 859   2                      if(App_Para.HC_Sta == CH_A_COOL){               
+ 860   3                              APP_CLR_SNEDDATA(CONT_CH_A_HEAT);
+ 861   3                              APP_CLR_SNEDDATA(CONT_CH_A_OFF);
+ 862   3                              APP_SET_SENDDATA(CONT_CH_A_COOL);
+ 863   3                      }else if(App_Para.HC_Sta == CH_A_HEAT){
+ 864   3                              APP_CLR_SNEDDATA(CONT_CH_A_OFF);
+ 865   3                              APP_CLR_SNEDDATA(CONT_CH_A_COOL);
+ 866   3                              APP_SET_SENDDATA(CONT_CH_A_HEAT);
+ 867   3                      }else{
+ 868   3                              APP_CLR_SNEDDATA(CONT_CH_A_COOL);
+ 869   3                              APP_CLR_SNEDDATA(CONT_CH_A_HEAT);
+ 870   3                              APP_SET_SENDDATA(CONT_CH_A_OFF);
+ 871   3                }
+ 872   2      
+ 873   2            
+ 874   2              /**
+ 875   2                              @brief:mass moudle
+ 876   2                      */
+ 877   2              if(App_Para.MASSAGESta == MASSAGE_ON)
+ 878   2              {
+ 879   3                  APP_CLR_SNEDDATA(CONT_MASS_OFF);
+ 880   3                  APP_SET_SENDDATA(CONT_MASS_ON);
+ 881   3              }
+ 882   2              else if(App_Para.MASSAGESta == MASSAGE_OFF)
+ 883   2              {
+ 884   3                  APP_CLR_SNEDDATA(CONT_MASS_ON);
+ 885   3                  APP_SET_SENDDATA(CONT_MASS_OFF);
+ 886   3              }
+ 887   2                       #if 1
+ 888   2              /**
+ 889   2                              @brief: warm moudle
+ 890   2                      */
+ 891   2              if(App_Para.WarmSta== WARM_ON)
+ 892   2              {
+ 893   3                  APP_CLR_SNEDDATA(CONT_WARM_CLOTH_OFF);
+ 894   3                  APP_SET_SENDDATA(CONT_WARM_CLOTH_ON);
+ 895   3              }
+ 896   2              else if(App_Para.MASSAGESta == MASSAGE_OFF)
+ 897   2              {
+ 898   3                  APP_CLR_SNEDDATA(CONT_WARM_CLOTH_ON);
+ 899   3                  APP_SET_SENDDATA(CONT_WARM_CLOTH_OFF);
+ 900   3              }
+ 901   2              #endif
+ 902   2              
+ 903   2                      App_Para.SentData = SentData;
+ 904   2                      System_Send_Message(SentData);
+ 905   2              }
+ 906   1      
+ 907   1              /**
+ 908   1                      @brief: heartbeat package
+ 909   1              */
+ 910   1              if(App_Para.OnLineFlag){
+ 911   2                      App_Para.OnLineFlag = False;
+ 912   2                      App_Para.OnLineCnt = 0;
+ 913   2                      System_Send_Message(App_Para.SentData);
+ 914   2              }
+ 915   1      
+ 916   1              /**
+ 917   1                      @breif: auto close
+ 918   1              */
+ 919   1              if((App_Para.HeatAutoCnt  >= HEAT_AUTO_CLOSE) && App_Para.HC_Sta == HEAT_MODE){
+ 920   2                      App_Para.HC_Sta = STOP_MODE;
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 16  
+
+ 921   2                      App_Para.UpDataFlag = True;
+ 922   2                      LED5_PIN = OFF;
+ 923   2                      RED_LED = OFF;
+ 924   2              key_static = 2;
+ 925   2              key_press_flag = 0;
+ 926   2              key_press_cnt  = 0;
+ 927   2              HEAT_COOL_START = 0;
+ 928   2                      HEAT_COOL_ARR[1] = 0;
+ 929   2                      if(App_Para.FootLedSta){
+ 930   3                              Bsp_PwmON();
+ 931   3                      }else{
+ 932   3                              Bsp_PwmOff();
+ 933   3                      }
+ 934   2                      APP_CLR_BACKLIGHT(TP_KEY0_LED);
+ 935   2      
+ 936   2                      IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+ 937   2              }
+ 938   1      
+ 939   1              if((App_Para.CoolAutoCnt >= COOL_AUTO_CLOSE) && App_Para.HC_Sta == COOL_MODE){
+ 940   2                      App_Para.HC_Sta = STOP_MODE;
+ 941   2                      App_Para.UpDataFlag = True;
+ 942   2              LED5_PIN = OFF;
+ 943   2                      RED_LED = OFF;
+ 944   2              key_static = 2;
+ 945   2              key_press_flag = 0;
+ 946   2              key_press_cnt  = 0;
+ 947   2              HEAT_COOL_START = 0;
+ 948   2                      HEAT_COOL_ARR[1] = 0;
+ 949   2                      if(App_Para.FootLedSta){
+ 950   3                              Bsp_PwmON();
+ 951   3                      }else{
+ 952   3                              Bsp_PwmOff();
+ 953   3                      }
+ 954   2              APP_CLR_BACKLIGHT(TP_KEY0_LED);
+ 955   2          
+ 956   2                      IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+ 957   2              }
+ 958   1            #if 1
+ 959   1              if((App_Para.MassAutoCnt >= MASS_AUTO_CLOSE) && App_Para.MASSAGESta == MASSAGE_ON){
+ 960   2                      App_Para.MASSAGESta = MASSAGE_OFF;
+ 961   2                      App_Para.UpDataFlag = True;
+ 962   2                      
+ 963   2                      LED1_PIN = OFF;
+ 964   2                      APP_CLR_BACKLIGHT(TP_KEY4_LED);
+ 965   2                      IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+ 966   2              }
+ 967   1           #endif
+ 968   1      
+ 969   1           #if 1
+ 970   1              if((App_Para.WarmAutoCnt >= WARM_AUTO_CLOSE) &&  App_Para.WarmSta == WARM_ON){
+ 971   2                      App_Para.WarmSta = WARM_OFF;
+ 972   2                      App_Para.UpDataFlag = True;
+ 973   2                      LED4_PIN = OFF;
+ 974   2                      RED_LED = OFF;
+ 975   2              APP_CLR_BACKLIGHT(TP_KEY1_LED);
+ 976   2                      IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+ 977   2              }
+ 978   1              #endif
+ 979   1              #if 0
+                      if((App_Para.SystemAutoCnt >= SYSTEM_AUTO_CLOSE) && !App_Para.ShutDownFlag){
+                      key_static = 2;
+                      key_press_flag = 0;
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 17  
+
+                      key_press_cnt  = 0;
+                      HEAT_COOL_START = 0;
+                      HEAT_COOL_ARR[1] = 0;
+                              App_Para.ShutDownFlag = True;
+                              App_Para.LockFlag = True;
+                              App_Para.UpDataFlag = True;
+                              App_Para.HC_Sta = STOP_MODE;
+                              App_Para.FootLedSta = FOOT_LED_OFF;
+                              App_Para.Pushrod_Status = PUSHROD_STOP;
+                              App_Para.Chg_CurKey = 0;
+                              LED0_PIN = ON;
+                              LED1_PIN = LED2_PIN = LED3_PIN = LED4_PIN = LED5_PIN = OFF;
+                              BACK_LIGHT = 0; 
+                              Bsp_PwmOff();
+                              RED_LED = OFF;
+                              App_Para.Tp_LedSta = 0;
+                              APP_SET_BACKLIGHT(TP_KEY5_LED);
+                              APP_CLR_BACKLIGHT(TP_KEY1_LED);
+                              APP_CLR_BACKLIGHT(TP_KEY2_LED);
+                              APP_CLR_BACKLIGHT(TP_KEY3_LED);
+                              APP_CLR_BACKLIGHT(TP_KEY4_LED);
+                              APP_CLR_BACKLIGHT(TP_KEY0_LED);
+                              App_Para.Tp_LedSta |= 0x40;
+                              App_Para.Tp_LedStaBak = App_Para.Tp_LedSta;     
+                              IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+                      }
+                      #endif
+1010   1      }
+1011          
+1012          /*****************************************************************************
+1013           * Function       : I2c_Irq
+1014           * Description   : 系统硬件I2C中断处理函数
+1015           * Input                  : None
+1016           * Output                 : None
+1017           * Return                 : 
+1018           * Others                 : 
+1019           * Record
+1020           * 1.Date                 : 20180404
+1021           *   Author       : marco
+1022           *   Modification: Created function
+1023          
+1024          *****************************************************************************/
+1025          #if SYS_ENABLE_I2C
+              void I2c_Irq() interrupt 7{
+                      /*<主机发送数据>*/
+                      if( (SSCON0&0x07) == 0x02){
+                              unsigned char get_data = SSDAT;
+                              if(get_data != I2C_ADDR){
+                                      App_LedHandle(get_data);
+                              }
+                      }
+                      /*<主机接收数据>*/
+                      else if( (SSCON0&0x07) == 0x03 ){
+                              if(I2C_IntGet() == 0){
+                                      I2C_IntSet(1);
+                              }
+                      }
+                      /*<必须手动清掉此位>*/  
+                      SSCON0 &= ~0X40;
+              }
+              #endif
+1044          
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 18  
+
+1045          /*****************************************************************************
+1046           * Function       : Bsp_Uart1IqrHandle
+1047           * Description   : UART1中断处理函数
+1048           * Input                  : None
+1049           * Output                 : None
+1050           * Return                 : 
+1051           * Others                 : 
+1052           * Record
+1053           * 1.Date                 : 20180409
+1054           *   Author       : marco
+1055           *   Modification: Created function
+1056          
+1057          *****************************************************************************/
+1058          #if SYS_ENABLE_UART1
+1059          void Bsp_Uart1IqrHandle() interrupt 7{
+1060   1              unsigned char crc = 0;
+1061   1              /*<发送数据>*/
+1062   1              if(SSCON0&0x02){
+1063   2                      SSCON0&=0xFD;
+1064   2                      if(Tx_Buf.send_cnt == Tx_Buf.len - 1){
+1065   3                              Tx_Buf.flag = False;
+1066   3                              P20 = 1;
+1067   3                              return ;
+1068   3                      }
+1069   2                      SSDAT = Tx_Buf.buf[++Tx_Buf.send_cnt];  
+1070   2              }
+1071   1              /*<接收数据>*/
+1072   1              #if 0
+                      if((SSCON0&0x01)){
+                              SSCON0&=0xFE;
+                              App_Para.Buf.rev_buf.buf[App_Para.Buf.rev_buf.len++] = SSDAT;
+                              
+                              if(App_Para.Buf.rev_buf.len>= APP_REV_SIZE ){
+                                      /*<不是发送到本机的数据，不理会>*/
+                                      if(App_Para.Buf.rev_buf.buf[1] != App_Para.addr){                               
+                                              memset((void*)&App_Para.Buf,0,sizeof(Buf_t));
+                                              return ;
+                                      }
+                                      /*<结尾符错误>*/
+                                      if(App_Para.Buf.rev_buf.buf[APP_REV_SIZE-2] != 0x0d || App_Para.Buf.rev_buf.buf[APP_REV_SIZE-1] != 0x0a
+             -){
+                                              memset((void*)&App_Para.Buf,0,sizeof(Buf_t));
+                                              return ;
+                                      }
+                                      /*<校验错误>*/
+                                      crc = (unsigned char)(App_Para.Buf.rev_buf.buf[0] + App_Para.Buf.rev_buf.buf[1] + App_Para.Buf.rev_buf.
+             -buf[2] + App_Para.Buf.rev_buf.buf[3]);
+                                      if(crc != App_Para.Buf.rev_buf.buf[4]){
+                                              memset((void*)&App_Para.Buf,0,sizeof(Buf_t));
+                                              return ;
+                                      }
+                                      
+                                      switch(App_Para.Buf.rev_buf.buf[0]){
+                                              case HOST_QUERY:{
+                                                      memset((void*)&App_Para.Buf.send_buf,0,sizeof(Buf_t));
+                                                      App_Para.Buf.send_buf.buf[0] = SLAVE_SEND_KEY_VALUE;
+                                                      App_Para.Buf.send_buf.buf[1] = App_Para.addr;
+                                                      App_Para.Buf.send_buf.buf[2] = App_Para.key_value/256;
+                                                      App_Para.Buf.send_buf.buf[3] = App_Para.key_value%256;
+                                                      App_Para.Buf.send_buf.buf[4] = (unsigned char)(App_Para.Buf.send_buf.buf[0]+ App_Para.Buf.send_buf.bu
+             -f[1] + App_Para.Buf.send_buf.buf[2] + App_Para.Buf.send_buf.buf[3]);
+                                                      App_Para.Buf.send_buf.buf[5] = 0x0d;
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 19  
+
+                                                      App_Para.Buf.send_buf.buf[6] = 0x0a;
+                                                      Bsp_UartSendBuf(BSP_UART1_ID, &App_Para.Buf.send_buf.buf[0], APP_REV_SIZE);
+                                                      break;
+                                              }
+              
+                                              case HOST_LIGHT_ON:{
+                                                      // add light handle
+                                                      break;
+                                              }
+              
+                                              default:
+                                                      break;
+                                      }
+                              }
+                      }
+                      #endif
+1120   1      }
+1121          #endif
+1122          
+1123          void Bsp_Timer0IqrHandle() interrupt 1{ 
+1124   1              static unsigned int base_time = 0;
+1125   1              TL0 = (65536 - 1000)%256;   
+1126   1              TH0 = (65536 - 1000)/256;
+1127   1              TimeOutDet_DecHandle();
+1128   1          if(key_press_flag)
+1129   1          {
+1130   2             key_press_cnt++;
+1131   2          }
+1132   1      
+1133   1              if(base_time ++ > 1000){
+1134   2                      base_time = 0;
+1135   2                      if(App_Para.HeatAutoClsFlag){
+1136   3                              if(App_Para.HeatAutoCnt ++ > HEAT_AUTO_CLOSE){
+1137   4                                      App_Para.HeatAutoClsFlag = False;
+1138   4                      App_Para.HC_Sta = STOP_MODE;
+1139   4                              }
+1140   3                      }       
+1141   2      
+1142   2                      if(App_Para.CoolAutoClsFlag){
+1143   3                              if(App_Para.CoolAutoCnt ++ > COOL_AUTO_CLOSE){
+1144   4                                      App_Para.CoolAutoClsFlag = False;
+1145   4                              }
+1146   3                      }       
+1147   2              #if 0
+                              if(App_Para.SystemAutoClsFlag){
+                                      if(App_Para.SystemAutoCnt ++ > SYSTEM_AUTO_CLOSE){
+                                              App_Para.SystemAutoClsFlag = False;
+                                      }
+                              }
+                      #endif
+1154   2              if(App_Para.MassAutoClsFlag)
+1155   2              {
+1156   3                 if(App_Para.MassAutoCnt ++ > MASS_AUTO_CLOSE){
+1157   4                      App_Para.MassAutoClsFlag = False;    
+1158   4                  }
+1159   3              }
+1160   2              #if 1
+1161   2              if(App_Para.WarmAutoClsFlag)
+1162   2              {
+1163   3                  if(App_Para.WarmAutoCnt++ > WARM_AUTO_CLOSE)
+1164   3                  {
+1165   4                      App_Para.WarmAutoClsFlag = False;                
+C51 COMPILER V9.59.0.0   APP                                                               11/29/2018 20:32:57 PAGE 20  
+
+1166   4                  }
+1167   3              }
+1168   2              #endif
+1169   2              }
+1170   1              #if 0
+                      if(!App_Para.OnLineFlag){
+                              if(App_Para.OnLineCnt ++ >= ONLINE_TIME){
+                                      App_Para.OnLineFlag = True;
+                              }
+                      }       
+              
+                      if(!App_Para.TpLedDisCntFlag){
+                              if(App_Para.TpLedDisCnt ++ > LED_DIS_TIME){
+                                      App_Para.TpLedDisCntFlag = True;
+                              }
+                      }       
+                      #endif
+1183   1      }
+1184          
+1185          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2634    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     61    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      8      12
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,90 @@
+C51 COMPILER V9.59.0.0   BSP_I2C_PORT                                                      11/17/2018 14:36:29 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE BSP_I2C_PORT
+OBJECT MODULE PLACED IN .\Objects\bsp_i2c_port.obj
+COMPILER INVOKED BY: E:\MDK\C51\BIN\C51.EXE ..\bsp\bsp_i2c_port.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\app;..\bsp;..\lib;.
+                    -.\lib\inc) DEBUG OBJECTEXTEND PRINT(.\Listings\bsp_i2c_port.lst) OBJECT(.\Objects\bsp_i2c_port.obj)
+
+line level    source
+
+   1          #include "sc93f833X_C.h"
+   2          
+   3          // simulate iic  
+   4          // chg
+   5          #define SDA0_Read()     P15
+   6          #define SDA0_Set(x)     ((x) ? (P15 = 1): (P15 = 0))
+   7          
+   8          #define SCL0_Read()     P14
+   9          #define SCL0_Set(x)     ((x) ? (P14 = 1) : (P14 = 0))
+  10          
+  11          int IIC_Port_Init(int ID){
+  12   1              if(ID == 0){
+  13   2                      P1CON |= 0X30;
+  14   2                      P1 |= 0X30;
+  15   2              }
+  16   1              return 1;
+  17   1      }
+  18          /*
+  19                  Func : 0 ->IN ;1 ->OUT
+  20          */
+  21          int IIC_Port_SDA_Set(int ID,int Func){
+  22   1              if(ID == 0){
+  23   2                      if(Func == 0){
+  24   3                              P1CON &= ~0X20;
+  25   3                      }else if(Func == 1){
+  26   3                              P1CON |= 0X20;
+  27   3                      }else{
+  28   3                              return 0;
+  29   3                      }
+  30   2              }
+  31   1              return 0;
+  32   1              
+  33   1      }
+  34          /*
+  35                  Func : 0->SDA 1->SCL
+  36                  Data: 0->out 0;
+  37          */
+  38          int IIC_Port_Write(int ID,int Func,int Data){
+  39   1              if(ID == 0){
+  40   2                      if(Func == 0){
+  41   3                              SDA0_Set(Data);
+  42   3                      }else if(Func == 1){
+  43   3                              SCL0_Set(Data);
+  44   3                      }else{
+  45   3                              return 0;
+  46   3                      }
+  47   2              }
+  48   1              return 0;
+  49   1      
+  50   1      }
+  51          
+  52          int IIC_Port_Read(int ID ,int Func ){
+  53   1              if(ID == 0){
+  54   2                      if(Func == 0){
+C51 COMPILER V9.59.0.0   BSP_I2C_PORT                                                      11/17/2018 14:36:29 PAGE 2   
+
+  55   3                              return SDA0_Read();
+  56   3                      }else if(Func == 1){
+  57   3                              return SCL0_Read();
+  58   3                      }else{
+  59   3                              return 0;
+  60   3                      }
+  61   2              }
+  62   1              return 0;
+  63   1      }
+  64          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    109    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

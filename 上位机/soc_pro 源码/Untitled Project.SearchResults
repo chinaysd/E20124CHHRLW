@@ -1,0 +1,41 @@
+---- Tp_LedSta Matches (40 in 2 files) ----
+App.c (app):#define APP_SET_BACKLIGHT(X)		( App_Para.Tp_LedSta &= (unsigned char)(X))
+App.c (app):#define APP_CLR_BACKLIGHT(X)		( App_Para.Tp_LedSta |= (unsigned char)(~X))
+App.c (app):		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.c (app):		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.c (app):		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.c (app):		App_Para.Tp_LedStaBak = App_Para.Tp_LedSta;
+App.c (app):			APP_SET_BACKLIGHT(TP_KEY5_LED);  //Tp_LedSta &=  0xdf     1101 1111     
+App.c (app):			APP_CLR_BACKLIGHT(TP_KEY5_LED);  //Tp_LedSta |= ~0xdf     0010 0000
+App.c (app):			APP_CLR_BACKLIGHT(TP_KEY0_LED);	  //Tp_LedSta |=  0xfe     1111 1110
+App.c (app):			APP_SET_BACKLIGHT(TP_KEY0_LED);   //Tp_LedSta &=  0xfe     1111 1110
+App.c (app):		App_Para.Tp_LedSta|= 0X40;
+App.c (app):		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.c (app):			App_Para.Tp_LedSta = 0;
+App.c (app):			IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);		
+App.c (app):		App_Para.Tp_LedSta = App_Para.Tp_LedStaBak;
+App.c (app):			APP_SET_BACKLIGHT(TP_KEY5_LED);  //Tp_LedSta &=  0xdf     1101 1111     
+App.c (app):			APP_CLR_BACKLIGHT(TP_KEY5_LED);  //Tp_LedSta |= ~0xdf     0010 0000
+App.c (app):		LED0_PIN =App_Para.Tp_LedSta & ~TP_KEY0_LED;
+App.c (app):		LED1_PIN =App_Para.Tp_LedSta & ~TP_KEY1_LED;
+App.c (app):		LED2_PIN =App_Para.Tp_LedSta & ~TP_KEY2_LED;
+App.c (app):		LED3_PIN =App_Para.Tp_LedSta & ~TP_KEY3_LED;
+App.c (app):		LED4_PIN =App_Para.Tp_LedSta & ~TP_KEY4_LED;
+App.c (app):		LED5_PIN =App_Para.Tp_LedSta & ~TP_KEY5_LED;
+App.c (app):        //APP_CLR_BACKLIGHT(TP_KEY5_LED);  //Tp_LedSta |= ~0xdf     0010 0000
+App.c (app):		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.c (app):		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.c (app):		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.c (app):					IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.c (app):	IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);	
+App.c (app):					IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.c (app):		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.c (app):		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.c (app):		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.c (app):		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.c (app):		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.c (app):		App_Para.Tp_LedSta = 0;
+App.c (app):		App_Para.Tp_LedSta |= 0x40;
+App.c (app):		App_Para.Tp_LedStaBak = App_Para.Tp_LedSta;	
+App.c (app):		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+App.h (app):	unsigned char Tp_LedSta,Tp_LedStaBak;			/*<¼ÇÂ¼LEDµÆ×´Ì¬>*/
