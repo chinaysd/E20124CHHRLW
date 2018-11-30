@@ -107,18 +107,18 @@ void App_LockKeyHandle(void){
 		App_Para.Tp_LedStaBak = App_Para.Tp_LedSta;
 		
 		if(App_Para.FootLedSta || App_Para.LockFlag){
-			APP_SET_BACKLIGHT(TP_KEY5_LED);  //Tp_LedSta &=  0xdf     1101 1111     
+			APP_SET_BACKLIGHT(TP_KEY5_LED);      
 			LED0_PIN = ON;
 		}else{
-			APP_CLR_BACKLIGHT(TP_KEY5_LED);  //Tp_LedSta |= ~0xdf     0010 0000
+			APP_CLR_BACKLIGHT(TP_KEY5_LED);  
 			LED0_PIN = OFF;
 		}
 		
 		if(App_Para.HC_Sta == STOP_MODE){
-			APP_CLR_BACKLIGHT(TP_KEY0_LED);	  //Tp_LedSta |=  0xfe     1111 1110
+			APP_CLR_BACKLIGHT(TP_KEY0_LED);	  
 			LED5_PIN = OFF;
 		}else if((App_Para.HC_Sta == HEAT_MODE)||(App_Para.HC_Sta == COOL_MODE)){
-			APP_SET_BACKLIGHT(TP_KEY0_LED);   //Tp_LedSta &=  0xfe     1111 1110
+			APP_SET_BACKLIGHT(TP_KEY0_LED);   
             LED5_PIN = ON;
 		}
        
@@ -173,10 +173,10 @@ void App_LockKeyHandle(void){
             LED5_PIN = ON;
 		}
         if(App_Para.FootLedSta || App_Para.LockFlag){
-			APP_SET_BACKLIGHT(TP_KEY5_LED);  //Tp_LedSta &=  0xdf     1101 1111     
+			APP_SET_BACKLIGHT(TP_KEY5_LED);       
 			LED0_PIN = ON;
 		}else{
-			APP_CLR_BACKLIGHT(TP_KEY5_LED);  //Tp_LedSta |= ~0xdf     0010 0000
+			APP_CLR_BACKLIGHT(TP_KEY5_LED);  
 			LED0_PIN = OFF;
 		}
         
@@ -607,6 +607,113 @@ void Key_Scan(void){
 	}		  	   
 }
 
+void Heat_AutoClose(void)
+{
+   if((App_Para.HeatAutoCnt  >= HEAT_AUTO_CLOSE) && App_Para.HC_Sta == HEAT_MODE){
+		App_Para.HC_Sta = STOP_MODE;
+		App_Para.UpDataFlag = True;
+		LED5_PIN = OFF;
+		RED_LED = OFF;
+        key_static = 2;
+        key_press_flag = 0;
+        key_press_cnt  = 0;
+        HEAT_COOL_START = 0;
+		HEAT_COOL_ARR[1] = 0;
+		if(App_Para.FootLedSta){
+			Bsp_PwmON();
+		}else{
+			Bsp_PwmOff();
+		}
+		APP_CLR_BACKLIGHT(TP_KEY0_LED);
+
+		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+	}
+}
+
+void Cool_AutoClose(void)
+{
+     if((App_Para.CoolAutoCnt >= COOL_AUTO_CLOSE) && App_Para.HC_Sta == COOL_MODE){
+		App_Para.HC_Sta = STOP_MODE;
+		App_Para.UpDataFlag = True;
+        LED5_PIN = OFF;
+		RED_LED = OFF;
+        key_static = 2;
+        key_press_flag = 0;
+        key_press_cnt  = 0;
+        HEAT_COOL_START = 0;
+		HEAT_COOL_ARR[1] = 0;
+		if(App_Para.FootLedSta){
+			Bsp_PwmON();
+		}else{
+			Bsp_PwmOff();
+		}
+        APP_CLR_BACKLIGHT(TP_KEY0_LED);
+    
+		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+	}
+}
+
+void Warm_AutoClose(void)
+{
+     #if 1
+    	if((App_Para.WarmAutoCnt >= WARM_AUTO_CLOSE) &&  App_Para.WarmSta == WARM_ON){
+		App_Para.WarmSta = WARM_OFF;
+		App_Para.UpDataFlag = True;
+		LED4_PIN = OFF;
+		RED_LED = OFF;
+        APP_CLR_BACKLIGHT(TP_KEY1_LED);
+		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+	}
+    #endif
+}
+
+void Mass_AutoClose(void)
+{
+    #if 1
+	if((App_Para.MassAutoCnt >= MASS_AUTO_CLOSE) && App_Para.MASSAGESta == MASSAGE_ON){
+		App_Para.MASSAGESta = MASSAGE_OFF;
+		App_Para.UpDataFlag = True;
+		
+		LED1_PIN = OFF;
+		APP_CLR_BACKLIGHT(TP_KEY4_LED);
+		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+	}
+    #endif
+}
+#if 0
+void System_AutoClose(void)
+{
+	if((App_Para.SystemAutoCnt >= SYSTEM_AUTO_CLOSE) && !App_Para.ShutDownFlag){
+        key_static = 2;
+        key_press_flag = 0;
+        key_press_cnt  = 0;
+        HEAT_COOL_START = 0;
+        HEAT_COOL_ARR[1] = 0;
+		App_Para.ShutDownFlag = True;
+		App_Para.LockFlag = True;
+		App_Para.UpDataFlag = True;
+		App_Para.HC_Sta = STOP_MODE;
+		App_Para.FootLedSta = FOOT_LED_OFF;
+		App_Para.Pushrod_Status = PUSHROD_STOP;
+		App_Para.Chg_CurKey = 0;
+		LED0_PIN = ON;
+		LED1_PIN = LED2_PIN = LED3_PIN = LED4_PIN = LED5_PIN = OFF;
+		BACK_LIGHT = 0;	
+		Bsp_PwmOff();
+		RED_LED = OFF;
+		App_Para.Tp_LedSta = 0;
+		APP_SET_BACKLIGHT(TP_KEY5_LED);
+		APP_CLR_BACKLIGHT(TP_KEY1_LED);
+		APP_CLR_BACKLIGHT(TP_KEY2_LED);
+		APP_CLR_BACKLIGHT(TP_KEY3_LED);
+		APP_CLR_BACKLIGHT(TP_KEY4_LED);
+		APP_CLR_BACKLIGHT(TP_KEY0_LED);
+		App_Para.Tp_LedSta |= 0x40;
+		App_Para.Tp_LedStaBak = App_Para.Tp_LedSta;	
+		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+		}
+}
+#endif
 /*****************************************************************************
  * Function	  : App_Init
  * Description   : 初始化系统
@@ -795,7 +902,7 @@ void App_Handle(void){
 	/**
 		@brief: refresh TP led display
 	*/
-	if(App_Para.TpLedDisCntFlag){
+	if(!App_Para.TpLedDisCntFlag){
 		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
 		App_Para.TpLedDisCntFlag = False;
 		App_Para.TpLedDisCnt = 0;
@@ -914,98 +1021,12 @@ void App_Handle(void){
 
 	/**
 		@breif: auto close
-	*/
-	if((App_Para.HeatAutoCnt  >= HEAT_AUTO_CLOSE) && App_Para.HC_Sta == HEAT_MODE){
-		App_Para.HC_Sta = STOP_MODE;
-		App_Para.UpDataFlag = True;
-		LED5_PIN = OFF;
-		RED_LED = OFF;
-        key_static = 2;
-        key_press_flag = 0;
-        key_press_cnt  = 0;
-        HEAT_COOL_START = 0;
-		HEAT_COOL_ARR[1] = 0;
-		if(App_Para.FootLedSta){
-			Bsp_PwmON();
-		}else{
-			Bsp_PwmOff();
-		}
-		APP_CLR_BACKLIGHT(TP_KEY0_LED);
-
-		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
-	}
-
-	if((App_Para.CoolAutoCnt >= COOL_AUTO_CLOSE) && App_Para.HC_Sta == COOL_MODE){
-		App_Para.HC_Sta = STOP_MODE;
-		App_Para.UpDataFlag = True;
-        LED5_PIN = OFF;
-		RED_LED = OFF;
-        key_static = 2;
-        key_press_flag = 0;
-        key_press_cnt  = 0;
-        HEAT_COOL_START = 0;
-		HEAT_COOL_ARR[1] = 0;
-		if(App_Para.FootLedSta){
-			Bsp_PwmON();
-		}else{
-			Bsp_PwmOff();
-		}
-        APP_CLR_BACKLIGHT(TP_KEY0_LED);
-    
-		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
-	}
-      #if 1
-    	if((App_Para.MassAutoCnt >= MASS_AUTO_CLOSE) && App_Para.MASSAGESta == MASSAGE_ON){
-		App_Para.MASSAGESta = MASSAGE_OFF;
-		App_Para.UpDataFlag = True;
-		
-		LED1_PIN = OFF;
-		APP_CLR_BACKLIGHT(TP_KEY4_LED);
-		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
-	}
-     #endif
-
-     #if 1
-    	if((App_Para.WarmAutoCnt >= WARM_AUTO_CLOSE) &&  App_Para.WarmSta == WARM_ON){
-		App_Para.WarmSta = WARM_OFF;
-		App_Para.UpDataFlag = True;
-		LED4_PIN = OFF;
-		RED_LED = OFF;
-        APP_CLR_BACKLIGHT(TP_KEY1_LED);
-		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
-	}
-        #endif
-	#if 0
-	if((App_Para.SystemAutoCnt >= SYSTEM_AUTO_CLOSE) && !App_Para.ShutDownFlag){
-        key_static = 2;
-        key_press_flag = 0;
-        key_press_cnt  = 0;
-        HEAT_COOL_START = 0;
-        HEAT_COOL_ARR[1] = 0;
-		App_Para.ShutDownFlag = True;
-		App_Para.LockFlag = True;
-		App_Para.UpDataFlag = True;
-		App_Para.HC_Sta = STOP_MODE;
-		App_Para.FootLedSta = FOOT_LED_OFF;
-		App_Para.Pushrod_Status = PUSHROD_STOP;
-		App_Para.Chg_CurKey = 0;
-		LED0_PIN = ON;
-		LED1_PIN = LED2_PIN = LED3_PIN = LED4_PIN = LED5_PIN = OFF;
-		BACK_LIGHT = 0;	
-		Bsp_PwmOff();
-		RED_LED = OFF;
-		App_Para.Tp_LedSta = 0;
-		APP_SET_BACKLIGHT(TP_KEY5_LED);
-		APP_CLR_BACKLIGHT(TP_KEY1_LED);
-		APP_CLR_BACKLIGHT(TP_KEY2_LED);
-		APP_CLR_BACKLIGHT(TP_KEY3_LED);
-		APP_CLR_BACKLIGHT(TP_KEY4_LED);
-		APP_CLR_BACKLIGHT(TP_KEY0_LED);
-		App_Para.Tp_LedSta |= 0x40;
-		App_Para.Tp_LedStaBak = App_Para.Tp_LedSta;	
-		IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
-	}
-	#endif
+	*/  
+	Cool_AutoClose();
+    Mass_AutoClose();
+    Warm_AutoClose();
+    Heat_AutoClose();
+	//System_AutoClose();
 }
 
 /*****************************************************************************
@@ -1128,7 +1149,6 @@ void Bsp_Timer0IqrHandle() interrupt 1{
     {
        key_press_cnt++;
     }
-
 	if(base_time ++ > 1000){
 		base_time = 0;
 		if(App_Para.HeatAutoClsFlag){
