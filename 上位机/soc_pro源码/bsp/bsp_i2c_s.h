@@ -3,8 +3,8 @@
 
 #include "sc93f833X_C.h"
 
-#define IIC_DelayBaseValue 			0
-#define IIC_DelayTime  				0
+#define IIC_DelayBaseValue 			5
+#define IIC_DelayTime  				5
 
 #define IIC_SDA  						0
 #define IIC_SCL						1

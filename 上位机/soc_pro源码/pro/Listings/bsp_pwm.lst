@@ -1,4 +1,4 @@
-C51 COMPILER V9.59.0.0   BSP_PWM                                                           03/23/2019 20:52:11 PAGE 1   
+C51 COMPILER V9.59.0.0   BSP_PWM                                                           03/24/2019 10:30:37 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE BSP_PWM
@@ -62,7 +62,7 @@ line level    source
   52   1      }
   53          
   54          void Bsp_PwmON(void){
-C51 COMPILER V9.59.0.0   BSP_PWM                                                           03/23/2019 20:52:11 PAGE 2   
+C51 COMPILER V9.59.0.0   BSP_PWM                                                           03/24/2019 10:30:37 PAGE 2   
 
   55   1             Bsp_PWMInit();
   56   1             PWMCON |= 0x80;

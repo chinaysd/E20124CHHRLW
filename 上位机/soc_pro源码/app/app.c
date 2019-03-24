@@ -727,6 +727,14 @@ void System_AutoClose(void)
  *   Modification: Created function
 
 *****************************************************************************/
+void Delay_Time(unsigned int Time)
+{
+	static unsigned int i,j;
+	for(i = Time; i > 0; i --)
+	{
+		for(j = 200; j > 0 ; j --);
+	}
+}
 void App_Init(void){
 	int i;	
 	App_LedInit();
@@ -743,6 +751,7 @@ void App_Init(void){
 		}
 		IIC_Init(&I2c_Para[i]);
 	}
+	Delay_Time(5000);
 	P1PH |= 0X80;		// i2c int 
 	APP_CLR_BACKLIGHT(TP_BACKLIGHT_LED);
 	IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);	
