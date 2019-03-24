@@ -999,7 +999,7 @@ void App_Handle(void){
             APP_CLR_SNEDDATA(CONT_WARM_CLOTH_OFF);
             APP_SET_SENDDATA(CONT_WARM_CLOTH_ON);
         }
-        else if(App_Para.MASSAGESta == MASSAGE_OFF)
+        else if(App_Para.WarmSta == WARM_OFF)
         {
             APP_CLR_SNEDDATA(CONT_WARM_CLOTH_ON);
             APP_SET_SENDDATA(CONT_WARM_CLOTH_OFF);

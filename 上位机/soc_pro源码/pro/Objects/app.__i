@@ -1,1 +1,1 @@
-"..\app\app.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(..\app;..\bsp;..\lib;..\lib\inc) DEBUG OBJECTEXTEND PRINT(.\Listings\app.lst) OBJECT(.\Objects\app.obj)
+"..\app\app.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(..\app;..\bsp;..\lib;..\lib\inc) DEBUG OBJECTEXTEND PRINT(.\Listings\app.lst) TABS (7) OBJECT(.\Objects\app.obj)

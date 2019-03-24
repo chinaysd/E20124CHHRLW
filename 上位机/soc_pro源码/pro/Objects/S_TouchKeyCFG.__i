@@ -1,1 +1,0 @@
-"..\lib\S_TouchKeyCFG.C" OPTIMIZE (8,SPEED) BROWSE INCDIR(..\app;..\bsp;..\lib;..\lib\inc) DEBUG OBJECTEXTEND PRINT(.\Listings\S_TouchKeyCFG.lst) OBJECT(.\Objects\S_TouchKeyCFG.obj)

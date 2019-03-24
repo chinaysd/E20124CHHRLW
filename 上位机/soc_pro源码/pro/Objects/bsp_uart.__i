@@ -1,1 +1,0 @@
-"..\bsp\bsp_uart.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(..\app;..\bsp;..\lib;..\lib\inc) DEBUG OBJECTEXTEND PRINT(.\Listings\bsp_uart.lst) OBJECT(.\Objects\bsp_uart.obj)

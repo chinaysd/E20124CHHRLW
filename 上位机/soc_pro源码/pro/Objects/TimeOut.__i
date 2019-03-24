@@ -1,1 +1,0 @@
-"..\bsp\TimeOut.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(..\app;..\bsp;..\lib;..\lib\inc) DEBUG OBJECTEXTEND PRINT(.\Listings\TimeOut.lst) OBJECT(.\Objects\TimeOut.obj)

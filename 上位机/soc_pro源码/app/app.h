@@ -28,11 +28,11 @@
 #define I2C_READ_ADDR			0X5B
 #define I2C_WRITE_ADDR			0X5A
 
-#define WARM_AUTO_CLOSE			3600
+#define WARM_AUTO_CLOSE	    3600
 #define HEAT_AUTO_CLOSE		    3600
-#define COOL_AUTO_CLOSE			7200
-#define MASS_AUTO_CLOSE			1800
-#define SYSTEM_AUTO_CLOSE		14400	
+#define COOL_AUTO_CLOSE		    7200
+#define MASS_AUTO_CLOSE		    1800
+#define SYSTEM_AUTO_CLOSE	    14400	
 
 /**
 	@breif:LED 脚位定义(拿起塑壳，从右往左看)
@@ -44,7 +44,7 @@
 #define   LED4_PIN               		P50
 #define   LED5_PIN               		P51
 #define 	BACK_LIGHT				P01
-#define 	RED_LED					  P27
+#define 	RED_LED					P27
 
 /**
 	@brief:触摸按键对应的值，跟LED一个方向

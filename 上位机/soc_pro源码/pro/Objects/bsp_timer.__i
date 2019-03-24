@@ -1,1 +1,0 @@
-"..\bsp\bsp_timer.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(..\app;..\bsp;..\lib;..\lib\inc) DEBUG OBJECTEXTEND PRINT(.\Listings\bsp_timer.lst) OBJECT(.\Objects\bsp_timer.obj)
