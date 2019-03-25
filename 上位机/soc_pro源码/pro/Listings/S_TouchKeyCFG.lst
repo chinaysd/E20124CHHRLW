@@ -1,9 +1,9 @@
-C51 COMPILER V9.59.0.0   S_TOUCHKEYCFG                                                     03/24/2019 10:30:38 PAGE 1   
+C51 COMPILER V9.59.0.0   S_TOUCHKEYCFG                                                     03/25/2019 15:27:09 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE S_TOUCHKEYCFG
 OBJECT MODULE PLACED IN .\Objects\S_TouchKeyCFG.obj
-COMPILER INVOKED BY: E:\MDK\C51\BIN\C51.EXE ..\lib\S_TouchKeyCFG.C OPTIMIZE(8,SPEED) BROWSE INCDIR(..\app;..\bsp;..\lib;
+COMPILER INVOKED BY: E:\MDK\C51\BIN\C51.EXE ..\lib\S_TouchKeyCFG.C OPTIMIZE(9,SPEED) BROWSE INCDIR(..\app;..\bsp;..\lib;
                     -..\lib\inc) DEBUG OBJECTEXTEND PRINT(.\Listings\S_TouchKeyCFG.lst) TABS(7) OBJECT(.\Objects\S_TouchKeyCFG.obj)
 
 line level    source
@@ -62,7 +62,7 @@ line level    source
   52          /***************弹簧库独有***************/
   53          #define              SOCAPI_SET_CS_FUNCTION                                         1             //0:表示不进行CS测试,1: 表示进行CS测试,默认0
   54          #define              SOCAPI_INHIBITION_ZONE                                      8         //抑制区间%，设置范围5-10，默认7,即（7*10）%=70% ，连水时加大该
-C51 COMPILER V9.59.0.0   S_TOUCHKEYCFG                                                     03/24/2019 10:30:38 PAGE 2   
+C51 COMPILER V9.59.0.0   S_TOUCHKEYCFG                                                     03/25/2019 15:27:09 PAGE 2   
 
              -参数,对讲机设置小
   55          #define              SOCAPI_MAX_KEY_MUTIPLE                                         300           //多少次干扰更新基线，默认300*5=1500
@@ -126,7 +126,7 @@ line level    source
  113          *入口参数：void
  114          *出口参数：unsigned  char 
  115          *备注   ：
-C51 COMPILER V9.59.0.0   S_TOUCHKEYCFG                                                     03/24/2019 10:30:38 PAGE 3   
+C51 COMPILER V9.59.0.0   S_TOUCHKEYCFG                                                     03/25/2019 15:27:09 PAGE 3   
 
  116          **************************************************/
  117          unsigned char GetInitAutoUpdateTime(void)
@@ -190,7 +190,7 @@ line level    source
  175          {      
  176   1          return TKChannelCfg[i][SET_ICHA]; 
  177   1      }
-C51 COMPILER V9.59.0.0   S_TOUCHKEYCFG                                                     03/24/2019 10:30:38 PAGE 4   
+C51 COMPILER V9.59.0.0   S_TOUCHKEYCFG                                                     03/25/2019 15:27:09 PAGE 4   
 
  178          /**************************************************
  179          *函数名称：unsigned char GetUpConfirmCnt(void)
@@ -254,7 +254,7 @@ line level    source
  237   2                    {
  238   3                           CurrentChannel[Ctk_Channel_mark] = i;                                        //选择触摸当前的通道
  239   3                           Ctk_Channel_mark++;
-C51 COMPILER V9.59.0.0   S_TOUCHKEYCFG                                                     03/24/2019 10:30:38 PAGE 5   
+C51 COMPILER V9.59.0.0   S_TOUCHKEYCFG                                                     03/25/2019 15:27:09 PAGE 5   
 
  240   3                           if(Ctk_Channel_mark >= SOCAPI_SET_TOUCHKEY_TOTAL)
  241   3                                  break;
@@ -318,7 +318,7 @@ line level    source
  299   1             if(GetIsNeedUpdateBaseline() == 0)                      //检测是否需要更新baseline 
  300   1             {
  301   2                    Keyvalue = SensorKeyFlag();                             //Sensor判断, 这里如果bMultiple = 1 表示中间有干扰       //分析按键，得出标准
-C51 COMPILER V9.59.0.0   S_TOUCHKEYCFG                                                     03/24/2019 10:30:38 PAGE 6   
+C51 COMPILER V9.59.0.0   S_TOUCHKEYCFG                                                     03/25/2019 15:27:09 PAGE 6   
 
              -的16通道bit 位                                                                         
  302   2                    for(t=0;t<CurrentChannelMax;t++)
@@ -382,7 +382,7 @@ line level    source
  360   2                    MultipleDeal(TKCFG[AUTO_UPDATE_TIME]);                                                                   //基线复位处理
  361   2             }  
  362   1             
-C51 COMPILER V9.59.0.0   S_TOUCHKEYCFG                                                     03/24/2019 10:30:38 PAGE 7   
+C51 COMPILER V9.59.0.0   S_TOUCHKEYCFG                                                     03/25/2019 15:27:09 PAGE 7   
 
  363   1             return KeyData;
  364   1      }
@@ -394,7 +394,7 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    623    ----
+   CODE SIZE        =    619    ----
    CONSTANT SIZE    =     82    ----
    XDATA SIZE       =     92    ----
    PDATA SIZE       =   ----    ----

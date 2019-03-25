@@ -1,9 +1,9 @@
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 1   
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE APP
 OBJECT MODULE PLACED IN .\Objects\app.obj
-COMPILER INVOKED BY: E:\MDK\C51\BIN\C51.EXE ..\app\app.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\app;..\bsp;..\lib;..\lib\inc
+COMPILER INVOKED BY: E:\MDK\C51\BIN\C51.EXE ..\app\app.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\app;..\bsp;..\lib;..\lib\inc
                     -) DEBUG OBJECTEXTEND PRINT(.\Listings\app.lst) TABS(7) OBJECT(.\Objects\app.obj)
 
 line level    source
@@ -62,7 +62,7 @@ line level    source
   52   1             LED0_PIN = LED1_PIN = LED2_PIN = LED3_PIN = LED4_PIN = LED5_PIN = RED_LED = OFF;         
   53   1             
   54   1             BACK_LIGHT = 1;                           
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 2   
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 2   
 
   55   1      }
   56          
@@ -126,7 +126,7 @@ line level    source
  114   3                           LED0_PIN = OFF;
  115   3                    }
  116   2                    
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 3   
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 3   
 
  117   2                    if(App_Para.HC_Sta == STOP_MODE){
  118   3                           APP_CLR_BACKLIGHT(TP_KEY0_LED);      
@@ -190,7 +190,7 @@ line level    source
  176   3                           APP_SET_BACKLIGHT(TP_KEY5_LED);       
  177   3                           LED0_PIN = ON;
  178   3                    }else{
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 4   
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 4   
 
  179   3                           APP_CLR_BACKLIGHT(TP_KEY5_LED);  
  180   3                           LED0_PIN = OFF;
@@ -254,7 +254,7 @@ line level    source
  238          void App_LightKeyHandle(void){
  239   1             if(!App_Para.LockFlag){
  240   2                    App_Para.UpDataFlag= True;
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 5   
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 5   
 
  241   2                    
  242   2                    if(App_Para.FootLedSta == FOOT_LED_OFF){
@@ -318,7 +318,7 @@ line level    source
  300   2                    APP_CLR_SHUTDOWN_CNT();
  301   2             }
  302   1      }
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 6   
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 6   
 
  303          #endif
  304          
@@ -382,7 +382,7 @@ line level    source
               #endif 
  363          
  364          
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 7   
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 7   
 
  365          /*****************************************************************************
  366           * Function     : App_Key2Handle
@@ -446,7 +446,7 @@ line level    source
                                    App_Para.HeatAutoClsFlag = False;
                             }
                             App_HeatCoolHandle();
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 8   
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 8   
 
                      }
               
@@ -510,7 +510,7 @@ line level    source
  486           * Return              : 
  487           * Others              : 
  488           * Record
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 9   
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 9   
 
  489           * 1.Date              : 20180416
  490           *   Author       : marco
@@ -574,7 +574,7 @@ line level    source
  546   4                                  break;
  547   4                           }
  548   3                           
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 10  
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 10  
 
  549   3                           case CHG_KEY2_VALUE:{
  550   4                                  if(App_Para.Chg_CurKey != CHG_KEY2_VALUE){
@@ -638,7 +638,7 @@ line level    source
  608   1      }
  609          
  610          void Heat_AutoClose(void)
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 11  
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 11  
 
  611          {
  612   1         if((App_Para.HeatAutoCnt  >= HEAT_AUTO_CLOSE) && App_Para.HC_Sta == HEAT_MODE){
@@ -702,7 +702,7 @@ line level    source
  670          void Mass_AutoClose(void)
  671          {
  672   1          #if 1
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 12  
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 12  
 
  673   1             if((App_Para.MassAutoCnt >= MASS_AUTO_CLOSE) && App_Para.MASSAGESta == MASSAGE_ON){
  674   2                    App_Para.MASSAGESta = MASSAGE_OFF;
@@ -714,40 +714,40 @@ line level    source
  680   2             }
  681   1          #endif
  682   1      }
- 683          #if 0
-              void System_AutoClose(void)
-              {
-                     if((App_Para.SystemAutoCnt >= SYSTEM_AUTO_CLOSE) && !App_Para.ShutDownFlag){
-                      key_static = 2;
-                      key_press_flag = 0;
-                      key_press_cnt  = 0;
-                      HEAT_COOL_START = 0;
-                      HEAT_COOL_ARR[1] = 0;
-                            App_Para.ShutDownFlag = True;
-                            App_Para.LockFlag = True;
-                            App_Para.UpDataFlag = True;
-                            App_Para.HC_Sta = STOP_MODE;
-                            App_Para.FootLedSta = FOOT_LED_OFF;
-                            App_Para.Pushrod_Status = PUSHROD_STOP;
-                            App_Para.Chg_CurKey = 0;
-                            LED0_PIN = ON;
-                            LED1_PIN = LED2_PIN = LED3_PIN = LED4_PIN = LED5_PIN = OFF;
-                            BACK_LIGHT = 0;      
-                            Bsp_PwmOff();
-                            RED_LED = OFF;
-                            App_Para.Tp_LedSta = 0;
-                            APP_SET_BACKLIGHT(TP_KEY5_LED);
-                            APP_CLR_BACKLIGHT(TP_KEY1_LED);
-                            APP_CLR_BACKLIGHT(TP_KEY2_LED);
-                            APP_CLR_BACKLIGHT(TP_KEY3_LED);
-                            APP_CLR_BACKLIGHT(TP_KEY4_LED);
-                            APP_CLR_BACKLIGHT(TP_KEY0_LED);
-                            App_Para.Tp_LedSta |= 0x40;
-                            App_Para.Tp_LedStaBak = App_Para.Tp_LedSta;      
-                            IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
-                            }
-              }
-              #endif
+ 683          #if 1
+ 684          void System_AutoClose(void)
+ 685          {
+ 686   1             if((App_Para.SystemAutoCnt >= SYSTEM_AUTO_CLOSE) && !App_Para.ShutDownFlag){
+ 687   2              key_static = 2;
+ 688   2              key_press_flag = 0;
+ 689   2              key_press_cnt  = 0;
+ 690   2              HEAT_COOL_START = 0;
+ 691   2              HEAT_COOL_ARR[1] = 0;
+ 692   2                    App_Para.ShutDownFlag = True;
+ 693   2                    App_Para.LockFlag = True;
+ 694   2                    App_Para.UpDataFlag = True;
+ 695   2                    App_Para.HC_Sta = STOP_MODE;
+ 696   2                    App_Para.FootLedSta = FOOT_LED_OFF;
+ 697   2                    App_Para.Pushrod_Status = PUSHROD_STOP;
+ 698   2                    App_Para.Chg_CurKey = 0;
+ 699   2                    LED0_PIN = ON;
+ 700   2                    LED1_PIN = LED2_PIN = LED3_PIN = LED4_PIN = LED5_PIN = OFF;
+ 701   2                    BACK_LIGHT = 0;      
+ 702   2                    Bsp_PwmOff();
+ 703   2                    RED_LED = OFF;
+ 704   2                    App_Para.Tp_LedSta = 0;
+ 705   2                    APP_SET_BACKLIGHT(TP_KEY5_LED);
+ 706   2                    APP_CLR_BACKLIGHT(TP_KEY1_LED);
+ 707   2                    APP_CLR_BACKLIGHT(TP_KEY2_LED);
+ 708   2                    APP_CLR_BACKLIGHT(TP_KEY3_LED);
+ 709   2                    APP_CLR_BACKLIGHT(TP_KEY4_LED);
+ 710   2                    APP_CLR_BACKLIGHT(TP_KEY0_LED);
+ 711   2                    App_Para.Tp_LedSta |= 0x40;
+ 712   2                    App_Para.Tp_LedStaBak = App_Para.Tp_LedSta;      
+ 713   2                    IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
+ 714   2                    }
+ 715   1      }
+ 716          #endif
  717          /*****************************************************************************
  718           * Function     : App_Init
  719           * Description   : 初始化系统
@@ -766,7 +766,7 @@ line level    source
  732   1             static unsigned int i,j;
  733   1             for(i = Time; i > 0; i --)
  734   1             {
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 13  
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 13  
 
  735   2                    for(j = 200; j > 0 ; j --);
  736   2             }
@@ -830,7 +830,7 @@ line level    source
  794   4                                  if(App_Para.Tp_CurKey != TP_KEY3_VALUE){
  795   5                                         App_Para.Tp_CurKey = TP_KEY3_VALUE;
  796   5                          App_Key3Handle(); //推杆B打开
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 14  
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 14  
 
  797   5                                  }
  798   4                                  break;
@@ -894,7 +894,7 @@ line level    source
  856   5                                         IIC_Write_Data(&I2c_Para[0], I2c_Para[0].write_addr, App_Para.Tp_LedSta);
  857   5                                         App_Para.LockDetFlag[1] = False;                               
  858   5                                         if(App_Para.Pushrod_Status != PUSHROD_STOP){
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 15  
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 15  
 
  859   6                                                App_Para.UpDataFlag = True;
  860   6                                                App_Para.Pushrod_Status = PUSHROD_STOP;
@@ -958,7 +958,7 @@ line level    source
  918   2             }
  919   1             
  920   1             /**
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 16  
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 16  
 
  921   1                    @brief:Send control command
  922   1             */
@@ -1022,7 +1022,7 @@ line level    source
  980   3                           APP_CLR_SNEDDATA(CONT_CH_A_COOL);
  981   3                           APP_SET_SENDDATA(CONT_CH_A_HEAT);
  982   3                    }else{
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 17  
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 17  
 
  983   3                           APP_CLR_SNEDDATA(CONT_CH_A_COOL);
  984   3                           APP_CLR_SNEDDATA(CONT_CH_A_HEAT);
@@ -1079,14 +1079,14 @@ line level    source
 1035   1          Mass_AutoClose();
 1036   1          Warm_AutoClose();
 1037   1          Heat_AutoClose();
-1038   1             //System_AutoClose();
+1038   1          System_AutoClose();
 1039   1      }
 1040          
 1041          /*****************************************************************************
 1042           * Function     : I2c_Irq
 1043           * Description   : 系统硬件I2C中断处理函数
 1044           * Input               : None
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 18  
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 18  
 
 1045           * Output              : None
 1046           * Return              : 
@@ -1150,7 +1150,7 @@ line level    source
                             App_Para.Buf.rev_buf.buf[App_Para.Buf.rev_buf.len++] = SSDAT;
                             
                             if(App_Para.Buf.rev_buf.len>= APP_REV_SIZE ){
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 19  
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 19  
 
                                    /*<不是发送到本机的数据，不理会>*/
                                    if(App_Para.Buf.rev_buf.buf[1] != App_Para.addr){                            
@@ -1214,7 +1214,7 @@ line level    source
 1163   2                    if(App_Para.HeatAutoClsFlag){
 1164   3                           if(App_Para.HeatAutoCnt ++ > HEAT_AUTO_CLOSE){
 1165   4                                  App_Para.HeatAutoClsFlag = False;
-C51 COMPILER V9.59.0.0   APP                                                               03/24/2019 10:30:38 PAGE 20  
+C51 COMPILER V9.59.0.0   APP                                                               03/25/2019 15:27:09 PAGE 20  
 
 1166   4                      App_Para.HC_Sta = STOP_MODE;
 1167   4                           }
@@ -1225,13 +1225,13 @@ line level    source
 1172   4                                  App_Para.CoolAutoClsFlag = False;
 1173   4                           }
 1174   3                    }      
-1175   2              #if 0
-                            if(App_Para.SystemAutoClsFlag){
-                                   if(App_Para.SystemAutoCnt ++ > SYSTEM_AUTO_CLOSE){
-                                          App_Para.SystemAutoClsFlag = False;
-                                   }
-                            }
-                      #endif
+1175   2              #if 1
+1176   2                    if(App_Para.SystemAutoClsFlag){
+1177   3                           if(App_Para.SystemAutoCnt ++ > SYSTEM_AUTO_CLOSE){
+1178   4                                  App_Para.SystemAutoClsFlag = False;
+1179   4                           }
+1180   3                    }
+1181   2              #endif
 1182   2              if(App_Para.MassAutoClsFlag)
 1183   2              {
 1184   3                 if(App_Para.MassAutoCnt ++ > MASS_AUTO_CLOSE){
@@ -1248,26 +1248,26 @@ line level    source
 1195   3              }
 1196   2              #endif
 1197   2             }
-1198   1             #if 0
-                     if(!App_Para.OnLineFlag){
-                            if(App_Para.OnLineCnt ++ >= ONLINE_TIME){
-                                   App_Para.OnLineFlag = True;
-                            }
-                     }      
-              
-                     if(!App_Para.TpLedDisCntFlag){
-                            if(App_Para.TpLedDisCnt ++ > LED_DIS_TIME){
-                                   App_Para.TpLedDisCntFlag = True;
-                            }
-                     }      
-                     #endif
+1198   1             #if 1
+1199   1             if(!App_Para.OnLineFlag){
+1200   2                    if(App_Para.OnLineCnt ++ >= ONLINE_TIME){
+1201   3                           App_Para.OnLineFlag = True;
+1202   3                    }
+1203   2             }      
+1204   1      
+1205   1             if(!App_Para.TpLedDisCntFlag){
+1206   2                    if(App_Para.TpLedDisCnt ++ > LED_DIS_TIME){
+1207   3                           App_Para.TpLedDisCntFlag = True;
+1208   3                    }
+1209   2             }      
+1210   1             #endif
 1211   1      }
 1212          
 1213          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   2713    ----
+   CODE SIZE        =   2567    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =     61    ----
    PDATA SIZE       =   ----    ----

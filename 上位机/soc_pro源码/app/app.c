@@ -680,7 +680,7 @@ void Mass_AutoClose(void)
 	}
     #endif
 }
-#if 0
+#if 1
 void System_AutoClose(void)
 {
 	if((App_Para.SystemAutoCnt >= SYSTEM_AUTO_CLOSE) && !App_Para.ShutDownFlag){
@@ -1035,7 +1035,7 @@ void App_Handle(void){
     Mass_AutoClose();
     Warm_AutoClose();
     Heat_AutoClose();
-	//System_AutoClose();
+    System_AutoClose();
 }
 
 /*****************************************************************************
@@ -1172,7 +1172,7 @@ void Bsp_Timer0IqrHandle() interrupt 1{
 				App_Para.CoolAutoClsFlag = False;
 			}
 		}	
-        #if 0
+        #if 1
 		if(App_Para.SystemAutoClsFlag){
 			if(App_Para.SystemAutoCnt ++ > SYSTEM_AUTO_CLOSE){
 				App_Para.SystemAutoClsFlag = False;
@@ -1195,7 +1195,7 @@ void Bsp_Timer0IqrHandle() interrupt 1{
         }
         #endif
 	}
-	#if 0
+	#if 1
 	if(!App_Para.OnLineFlag){
 		if(App_Para.OnLineCnt ++ >= ONLINE_TIME){
 			App_Para.OnLineFlag = True;

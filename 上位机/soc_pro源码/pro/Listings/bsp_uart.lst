@@ -1,9 +1,9 @@
-C51 COMPILER V9.59.0.0   BSP_UART                                                          03/24/2019 10:30:37 PAGE 1   
+C51 COMPILER V9.59.0.0   BSP_UART                                                          03/25/2019 15:27:08 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE BSP_UART
 OBJECT MODULE PLACED IN .\Objects\bsp_uart.obj
-COMPILER INVOKED BY: E:\MDK\C51\BIN\C51.EXE ..\bsp\bsp_uart.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\app;..\bsp;..\lib;..\li
+COMPILER INVOKED BY: E:\MDK\C51\BIN\C51.EXE ..\bsp\bsp_uart.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\app;..\bsp;..\lib;..\li
                     -b\inc) DEBUG OBJECTEXTEND PRINT(.\Listings\bsp_uart.lst) TABS(7) OBJECT(.\Objects\bsp_uart.obj)
 
 line level    source
@@ -62,7 +62,7 @@ line level    source
   52          
   53          /*****************************************************************************
   54           * Function     : Bsp_UartSendBuf
-C51 COMPILER V9.59.0.0   BSP_UART                                                          03/24/2019 10:30:37 PAGE 2   
+C51 COMPILER V9.59.0.0   BSP_UART                                                          03/25/2019 15:27:08 PAGE 2   
 
   55           * Description   : 串口发送数据
   56           * Input           : unsigned char id    
